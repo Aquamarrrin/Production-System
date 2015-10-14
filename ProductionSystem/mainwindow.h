@@ -27,8 +27,11 @@ private:
     QLineEdit* lineFilePath;
 
     QVBoxLayout* layoutV;
+    QHBoxLayout* layoutH;
 
-    QTextEdit* te;
+    QTextEdit* teObj;
+    QTextEdit* teRel;
+    QTextEdit* teRes;
 
 };
 

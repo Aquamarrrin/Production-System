@@ -18,6 +18,7 @@ Parser::Parser(QString filePath)
     if(progTxt.size()!=0)
         parseFile();
 
+    deltaSize=countNewObjects();
 }
 
 void Parser::parseFile()
@@ -315,7 +316,34 @@ bool Parser::isSameRelations(Relation rel)
     return false;
 }
 
+int Parser::countNewObjects()
+{
+    int oldSize=newObjects.size();
+    int size=oldSize;
+    for(int i(1);i<=objects.size();i++)
+    {
+        if(objects[i]==newObjects[i])
+        {
+            size--;
+        }
+    }
+
+    return oldSize-size;
+
+}
+
 QMap<int, QString> Parser::getNewObjects()
 {
     return newObjects;
 }
+
+QMap<int, QString> Parser::getOldObjects()
+{
+    return objects;
+}
+
+QVector<Relation> Parser::getNewRelations()
+{
+    return newRelations;
+}
+

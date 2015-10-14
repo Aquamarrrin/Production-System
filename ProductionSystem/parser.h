@@ -16,6 +16,10 @@ class Parser
 public:
     Parser(QString filePath);
     QMap<int,QString> getNewObjects();
+    QMap<int,QString> getOldObjects();
+    QVector<Relation> getNewRelations();
+
+    int deltaSize;
 
 private:
     QVector<QString> progTxt;
@@ -27,8 +31,8 @@ private:
     void parseFile();
 
     void findObjects(QString str);
-    Relation findRelations(QString str);
     void findRules(QString str);
+    Relation findRelations(QString str);
 
     bool findNewObjects(QMap<int,QString> objects, QVector<Relation> relations);
     bool findNewRelations(QVector<Relation> relations);
@@ -38,7 +42,7 @@ private:
     bool isSameNewObjects(QString str);
     bool isSameRelations(Relation rel);
 
-
+    int countNewObjects();
 };
 
 #endif // PARSER_H
