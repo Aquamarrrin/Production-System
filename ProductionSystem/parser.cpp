@@ -1,0 +1,317 @@
+#include "parser.h"
+// D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\build-ProductionSystem-Desktop_Qt_5_1_1_MinGW_32bit-Debug\\debug\\test.txt
+Parser::Parser(QString filePath)
+{
+    fstream f;
+    f.open(filePath.toStdString().c_str(),ios::in);
+    if (f)
+    {
+        while (!f.eof())
+        {
+            char tmp[256];
+            f.getline(tmp,256);
+            progTxt.push_back(tmp);
+        }
+    }
+
+    f.close();
+
+    int i=0;
+    while(progTxt[i]!="Bon:" && i!=progTxt.size())
+    {
+        if(progTxt[i]!="Obj:" && progTxt[i]!="")
+            findObjects(progTxt[i]);
+        i++;
+    }
+    i++;
+    while(progTxt[i]!="Rul:" && i!=progTxt.size())
+    {
+        if(progTxt[i]!="")
+            relations.push_back(findRelations(progTxt[i]));
+        i++;
+    }
+    i++;
+
+    newObjects=objects;
+    newRelations=relations;
+
+    bool x1=findNewRelations(newRelations);
+    while(x1)
+        x1=findNewRelations(newRelations);
+
+    while(i!=progTxt.size())
+    {
+        if(progTxt[i]!="")
+            findRules(progTxt[i]);
+        i++;
+    }
+//    for(int j=0;j<newRelations.size();j++)
+//    {
+//        qDebug()<<newRelations[j].from<<" : "<<newRelations[j].to<<" : "<<newRelations[j].type;
+//    }
+
+
+    bool x2 = findNewObjects(objects,newRelations);
+    while(x2)
+        x2=findNewObjects(newObjects,newRelations);
+
+
+}
+
+void Parser::findObjects(QString str)
+{
+    QString tmpStr;
+    int num;
+    int i=0;
+
+//СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
+    //Вырезаем номер объекта
+    while(str[i]!=' ' && i!=str.size())
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    num=tmpStr.toInt();
+    tmpStr="";
+
+    i++;
+    //Вырезаем имя объекта
+    while(str[i]!=' ' && i!=str.size())
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    //qDebug()<<tmpStr;
+    if(tmpStr!="")
+        objects[num].push_back(tmpStr);
+}
+
+Relation Parser::findRelations(QString str)
+{
+    QString tmpStr;
+    QString type;
+    int from;
+    int to;
+    int i=0;
+
+//СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
+    //Вырезаем узел "от кого"
+    while(str[i]!=' ' && i!=str.size())
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    from=tmpStr.toInt();
+    tmpStr="";
+    i++;
+
+    //Вырезаем узел "связь"
+    while(str[i]!=' ' && i!=str.size())
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    type=tmpStr;
+    tmpStr="";
+    i++;
+
+    //Вырезаем узел "к кому"
+    while(i!=str.size() && str[i]!=' ')
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    to=tmpStr.toInt();
+
+    Relation rel(from, to, type);
+    return rel;
+}
+
+void Parser:: findRules(QString str)
+{
+    QString tmpStr;
+    int i=0;
+
+    while(i!=str.size() && str[i]!=' ')
+    {
+        tmpStr+=str[i];
+        i++;
+    }
+    if(tmpStr=="IF")
+    {
+        i++;
+        tmpStr="";
+        while(i!=str.size() && str[i]!='T')
+        {
+            tmpStr+=str[i];
+            i++;
+        }
+        //qDebug()<<tmpStr;
+        if(isSameRelations(findRelations(tmpStr)))
+        {
+            tmpStr="";
+            while(i!=str.size() && str[i]!=' ')
+            {
+                tmpStr+=str[i];
+                i++;
+            }
+            if(tmpStr=="THEN")
+            {
+                i++;
+                tmpStr="";
+                while(i!=str.size() )
+                {
+                    tmpStr+=str[i];
+                    i++;
+                }
+                //qDebug()<<findRelations(tmpStr).type;
+                if(!isSameRelations(findRelations(tmpStr)))
+                {
+                    newRelations.push_back(findRelations(tmpStr));
+                }
+            }
+        }
+    }
+
+}
+
+bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relations)
+{
+    bool found = false;
+    for(int i=1;i<objects.size();i++)
+    {
+        for(int j=i+1;j<=objects.size();j++)
+        {
+            if(objects[j].contains(objects[i]))
+            {
+                int k=0;
+                while(k!=relations.size() )
+                {
+                    QMap<int,QString> tmpMap1=objects;
+                    QMap<int,QString> tmpMap2=objects;
+                    QString tmpStr1 = tmpMap1[j].replace(objects[i],objects[relations[k].to]);
+                    QString tmpStr2 = tmpMap2[j].replace(objects[i],objects[relations[k].from]);
+
+                    if(relations[k].from==i && relations[k].type=="equals" && !isSameNewObjects(tmpStr1))
+                    {
+                        newObjects[newObjects.size()+1]=tmpStr1;
+                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr1;
+                        found=true;
+                    }
+                    if(relations[k].to==i && relations[k].type=="equals" && !isSameNewObjects(tmpStr2))
+                    {
+                        newObjects[newObjects.size()+1]=tmpStr2;
+                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr2;
+                        found=true;
+                    }
+                    k++;
+                }
+            }
+            if(objects[j].contains("("+objects[i]+")*"))
+            {
+                QString tmpStr3=objects[j];
+                QString tmpStr4=deleteScobs("("+objects[i]+")"+"*("+tmpStr3.remove("("+objects[i]+")*")+")");
+                int count = objects[j].count(objects[i]+")*");
+                if(count>1 && !isSameNewObjects(tmpStr4))
+                {
+                    newObjects[newObjects.size()+1]=tmpStr4;
+                    //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    found=true;
+                }
+            }
+            if(objects[j].contains("*("+objects[i]+")"))
+            {
+                QString tmpStr3=objects[j];
+                QString tmpStr4=deleteScobs("("+objects[i]+")"+"*("+tmpStr3.remove("*("+objects[i]+")")+")");
+                int count = objects[j].count("*("+objects[i]+")");
+                if(count>1 && !isSameNewObjects(tmpStr4))
+                {
+                    newObjects[newObjects.size()+1]=tmpStr4;
+                    //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    found=true;
+                }
+            }
+            if(objects[j].contains("("+objects[i]+")*("+objects[i]+")"))
+            {
+                QMap<int,QString> tmpMap=objects;
+                QString tmpStr = tmpMap[j].replace("("+objects[i]+")*("+objects[i]+")", "("+objects[i]+")^2");
+                //qDebug()<<objects[j]<<" : "<<tmpStr;
+                if(!isSameNewObjects(tmpStr))
+                {
+                    newObjects[newObjects.size()+1]=tmpStr;
+                    found=true;
+                }
+            }
+        }
+    }
+
+    //qDebug()<<newObjects;
+    return found;
+}
+
+bool Parser::findNewRelations(QVector<Relation> relations)
+{
+    bool found=false;
+
+    for(int i=0;i<relations.size();i++)
+    {
+        for(int j=i;j<relations.size();j++)
+        {
+            if(relations[i].from==relations[j].from && relations[i].type==relations[j].type && relations[j].type=="equals")
+            {
+                Relation rel(relations[i].to,relations[j].to,"equals");
+                if(!isSameRelations(rel))
+                {
+                    newRelations.push_back(rel);
+                    found=true;
+                }
+            }
+            if(relations[i].to==relations[j].to && relations[i].type==relations[j].type && relations[j].type=="equals")
+            {
+                Relation rel(relations[i].from,relations[j].from,"equals");
+                if(!isSameRelations(rel))
+                {
+                    newRelations.push_back(rel);
+                    found=true;
+                }
+            }
+        }
+    }
+
+    return found;
+}
+
+QString Parser::deleteScobs(QString str)
+{
+    for(int i=0;i<str.size()-1;i++)
+    {
+        if(str[i]=='(' && str[i+1]==')')
+            str.remove(i,2);
+    }
+    return str;
+}
+
+bool Parser::isSameNewObjects(QString str)
+{
+    for(int i=1;i<=newObjects.size();i++)
+    {
+        if(str==newObjects[i])
+            return true;
+    }
+    return false;
+}
+
+bool Parser::isSameRelations(Relation rel)
+{
+    for(int i=0;i<newRelations.size();i++)
+    {
+        if(rel.from==newRelations[i].from && rel.to==newRelations[i].to && rel.type==newRelations[i].type)
+            return true;
+    }
+    return false;
+}
+
+QMap<int, QString> Parser::getNewObjects()
+{
+    return newObjects;
+}
