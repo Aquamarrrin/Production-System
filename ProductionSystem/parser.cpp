@@ -1,21 +1,27 @@
 #include "parser.h"
-// D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\build-ProductionSystem-Desktop_Qt_5_1_1_MinGW_32bit-Debug\\debug\\test.txt
+// D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\ProductionSystem\\test.txt
 Parser::Parser(QString filePath)
 {
-    fstream f;
-    f.open(filePath.toStdString().c_str(),ios::in);
-    if (f)
+    QFile myFile(filePath);
+    if(!myFile.open(QFile::ReadOnly | QFile::Text))
     {
-        while (!f.eof())
-        {
-            char tmp[256];
-            f.getline(tmp,256);
-            progTxt.push_back(tmp);
-        }
+
     }
+    QTextStream myText(&myFile);
+    while (myText.atEnd() == false)
+    {
+        QString strTxt=myText.readLine();
+        progTxt.push_back(strTxt);
+    }
+    myFile.close();
 
-    f.close();
+    if(progTxt.size()!=0)
+        parseFile();
 
+}
+
+void Parser::parseFile()
+{
     int i=0;
     while(progTxt[i]!="Bon:" && i!=progTxt.size())
     {
@@ -54,8 +60,6 @@ Parser::Parser(QString filePath)
     bool x2 = findNewObjects(objects,newRelations);
     while(x2)
         x2=findNewObjects(newObjects,newRelations);
-
-
 }
 
 void Parser::findObjects(QString str)

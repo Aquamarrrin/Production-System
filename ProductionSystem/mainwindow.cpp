@@ -25,10 +25,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::loadParser()
 {
-    Parser* pars =new Parser(lineFilePath->text());
-    for(int i=1;i<=pars->getNewObjects().size();i++)
+    if(lineFilePath->isModified() && lineFilePath->text()!="")
     {
-        te->textCursor().insertText(pars->getNewObjects()[i]+"\n");
+        te->clear();
+        Parser* pars =new Parser(lineFilePath->text());
+        for(int i=1;i<=pars->getNewObjects().size();i++)
+        {
+            te->textCursor().insertText(pars->getNewObjects()[i]+"\n");
+        }
     }
 }
 

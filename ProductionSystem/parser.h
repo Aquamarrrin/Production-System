@@ -1,8 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <iostream>
-#include <fstream>
+#include <QFile>
+#include <QTextStream>
 #include <QString>
 #include <QVector>
 #include <QMap>
@@ -23,6 +23,8 @@ private:
     QVector<Relation> relations;
     QMap<int,QString> newObjects;
     QVector<Relation> newRelations;
+
+    void parseFile();
 
     void findObjects(QString str);
     Relation findRelations(QString str);
