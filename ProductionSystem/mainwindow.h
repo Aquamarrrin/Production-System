@@ -6,6 +6,7 @@
 #include <QLayout>
 #include <QTextEdit>
 #include <QLineEdit>
+#include <QLabel>
 #include <QString>
 #include "parser.h"
 
@@ -19,15 +20,16 @@ public:
 
 private slots:
     void loadParser();
+    void findLine();
 
 private:
     QPushButton* btnAnalyze;
     QPushButton* btnLoad;
 
     QLineEdit* lineFilePath;
+    QLineEdit* findLineText;
 
-    QVBoxLayout* layoutV;
-    QHBoxLayout* layoutH;
+    QGridLayout* layoutV;
 
     QTextEdit* teObj;
     QTextEdit* teRel;

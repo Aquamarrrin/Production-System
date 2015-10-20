@@ -61,6 +61,10 @@ void Parser::parseFile()
     bool x2 = findNewObjects(objects,newRelations);
     while(x2)
         x2=findNewObjects(newObjects,newRelations);
+
+    x1=findNewRelations(newRelations);
+    while(x1)
+        x1=findNewRelations(newRelations);
 }
 
 void Parser::findObjects(QString str)
@@ -180,6 +184,7 @@ void Parser:: findRules(QString str)
 
 }
 
+//Нахождение новых объектов
 bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relations)
 {
     bool found = false;
@@ -201,12 +206,16 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                     {
                         newObjects[newObjects.size()+1]=tmpStr1;
                         //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr1;
+                        Relation rel(j,newObjects.size(),"equals");
+                        newRelations.push_back(rel);
                         found=true;
                     }
                     if(relations[k].to==i && relations[k].type=="equals" && !isSameNewObjects(tmpStr2))
                     {
                         newObjects[newObjects.size()+1]=tmpStr2;
                         //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr2;
+                        Relation rel(j,newObjects.size(),"equals");
+                        newRelations.push_back(rel);
                         found=true;
                     }
                     k++;
@@ -221,6 +230,8 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                 {
                     newObjects[newObjects.size()+1]=tmpStr4;
                     //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    Relation rel(j,newObjects.size(),"equals");
+                    newRelations.push_back(rel);
                     found=true;
                 }
             }
@@ -233,6 +244,8 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                 {
                     newObjects[newObjects.size()+1]=tmpStr4;
                     //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    Relation rel(j,newObjects.size(),"equals");
+                    newRelations.push_back(rel);
                     found=true;
                 }
             }
@@ -244,6 +257,8 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                 if(!isSameNewObjects(tmpStr))
                 {
                     newObjects[newObjects.size()+1]=tmpStr;
+                    Relation rel(j,newObjects.size(),"equals");
+                    newRelations.push_back(rel);
                     found=true;
                 }
             }
