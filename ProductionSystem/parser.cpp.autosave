@@ -221,7 +221,7 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                     k++;
                 }
             }
-            if(objects[j].contains("("+objects[i]+")*") && !objects[j].contains("sqrt("))
+            if(objects[j].contains("("+objects[i]+")*") && !objects[j].contains("sqrt(")) //ДОРАБОТАТЬ!!!!! КОСТЫЛЬ
             {
                 QString tmpStr3=objects[j];
                 QString tmpStr4=deleteScobs("("+objects[i]+")"+"*("+tmpStr3.remove("("+objects[i]+")*")+")");

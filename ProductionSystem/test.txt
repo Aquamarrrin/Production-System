@@ -1,30 +1,9 @@
 Obj:
-1 cosA
-2 cosB
-3 AD
-4 AC
-5 BD
-6 BC
-7 AB
-8 (AD)/(AC)
-9 (AC)/(AB)
-10 (BD)/(BC)
-11 (BC)/(AB)
-12 (AD)+(BD)
-13 (AC)*(AC)
-14 (AB)*(AD)
-15 (BC)*(BC)
-16 (AB)*(BD)
-17 (AC)*(AC)+(BC)*(BC)
-
+1 D
+2 sqrt(D)
+3 (sqrt(D))*(sqrt(D))
 
 Bon:
-1 equals 8
-1 equals 9
-2 equals 10
-2 equals 11
-7 equals 12
+
 
 Rul:
-IF 8 equals 9 THEN 13 equals 14
-IF 10 equals 11 THEN 15 equals 16

@@ -1,0 +1,20 @@
+Obj:
+1 b
+2 c
+3 x1
+4 x2
+5 D
+6 sqrt(D)
+7 (b)*(b)-(4)*(c)
+8 (-(b)+(sqrt(D)))/(2)
+9 (-(b)-(sqrt(D)))/(2)
+10 (x1)+(x2)
+11 (x1)*(x2)
+
+
+Bon:
+5 equals 7
+3 equals 8
+4 equals 9
+
+Rul:
