@@ -221,7 +221,7 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                     k++;
                 }
             }
-            if(objects[j].contains("("+objects[i]+")*") && !objects[j].contains("sqrt("))
+            if(objects[j].contains("("+objects[i]+")*") && !cutFunc(objects[j],"sqrt_").contains(objects[i]))
             {
                 QString tmpStr3=objects[j];
                 QString tmpStr4=deleteScobs("("+objects[i]+")"+"*("+tmpStr3.remove("("+objects[i]+")*")+")");
@@ -235,7 +235,7 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                     found=true;
                 }
             }
-            if(objects[j].contains("*("+objects[i]+")") && !objects[j].contains("sqrt("))
+            if(objects[j].contains("*("+objects[i]+")") && !cutFunc(objects[j],"sqrt_").contains(objects[i]))
             {
                 QString tmpStr3=objects[j];
                 QString tmpStr4=deleteScobs("("+objects[i]+")"+"*("+tmpStr3.remove("*("+objects[i]+")")+")");
@@ -264,10 +264,10 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
 
 
             }
-            if(objects[j].contains("(sqrt("+objects[i]+"))^2"))
+            if(objects[j].contains("(sqrt_"+objects[i]+")^2"))
             {
                 QMap<int,QString> tmpMap=objects;
-                QString tmpStr = tmpMap[j].replace("(sqrt("+objects[i]+"))^2", objects[i]);
+                QString tmpStr = tmpMap[j].replace("(sqrt_("+objects[i]+"))^2", objects[i]);
                 qDebug()<<objects[j]<<" : "<<tmpStr;
                 if(!isSameNewObjects(tmpStr))
                 {
@@ -282,6 +282,8 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
                     newRelations.push_back(rel);
                 }
             }
+
+
         }
     }
 
@@ -321,6 +323,23 @@ bool Parser::findNewRelations(QVector<Relation> relations)
     return found;
 }
 
+QString Parser::cutFunc(QString obj, QString func)
+{
+    QString str;
+    if(obj.contains(func))
+    {
+        int i=0;
+        str=obj.mid(obj.indexOf(func),func.size()+i);
+        while(i!=obj.size() && countLeftScobs(str)!=countRightScobs(str))
+        {
+            i++;
+            str=obj.mid(obj.indexOf(func),func.size()+i);
+        }
+    }
+    return str;
+}
+
+
 QString Parser::deleteScobs(QString str)
 {
     for(int i=0;i<str.size()-1;i++)
@@ -329,6 +348,28 @@ QString Parser::deleteScobs(QString str)
             str.remove(i,2);
     }
     return str;
+}
+
+int Parser::countLeftScobs(QString str)
+{
+    int count =0 ;
+    for(int i=0;i<str.size()-1;i++)
+    {
+        if(str[i]=='(')
+            count++;
+    }
+    return count;
+}
+
+int Parser::countRightScobs(QString str)
+{
+    int count =0 ;
+    for(int i=0;i<str.size()-1;i++)
+    {
+        if(str[i]==')')
+            count++;
+    }
+    return count;
 }
 
 bool Parser::isSameNewObjects(QString str)
@@ -349,6 +390,18 @@ bool Parser::isSameRelations(Relation rel)
             return true;
     }
     return false;
+}
+
+QVector<int> Parser::whatObj(QString str)
+{
+    QVector<int>  indexes;
+
+    for(int i=1;i<objects.size();i++)
+    {
+        if(str.contains(objects[i]))
+            indexes.push_back(i);
+    }
+    return indexes;
 }
 
 int Parser::countNewObjects()
