@@ -1,0 +1,20 @@
+Obj:
+1 D
+2 A
+3 B
+4 C
+5 T1
+6 T2
+7 (+(B)+(A))/2
+8 (+(D)+(C))/2
+9 (+((B)/2)+((A)/2))*(+((D)/2)+((C)/2))
+Bon:
+
+Rul:
+IF (+(obj1)+(obj2))/2 THEN (+(obj1)+(obj2))/2 equals +((obj1)/2)+((obj2)/2)
+IF (+(obj1)-(obj2))/2 THEN (+(obj1)-(obj2))/2 equals +((obj1)/2)-((obj2)/2)
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2
+IF (+2*(obj1))/2 THEN (+2*(obj1))/2 equals 2*(obj1)/2
+IF (+2*(obj1))/2 THEN (+2*(obj1))/2 equals 1*(obj1)
+IF 2*((obj1)/2) THEN 2*((obj1)/2) equals 1*(obj1)
+IF 1*(obj1) THEN 1*(obj1) equals obj1

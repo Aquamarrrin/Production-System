@@ -10,12 +10,12 @@ Obj:
 9 (AC)/(AB)
 10 (BD)/(BC)
 11 (BC)/(AB)
-12 (AD)+(BD)
+12 +(AD)+(BD)
 13 (AC)*(AC)
 14 (AB)*(AD)
 15 (BC)*(BC)
 16 (AB)*(BD)
-17 (AC)*(AC)+(BC)*(BC)
+17 (+(AC)*(AC)+(BC)*(BC))
 
 
 Bon:
@@ -28,3 +28,5 @@ Bon:
 Rul:
 IF 8 equals 9 THEN 13 equals 14
 IF 10 equals 11 THEN 15 equals 16
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2
+IF +(obj1)+(obj2) THEN +(obj1)+(obj2) equals +(obj2)+(obj1)

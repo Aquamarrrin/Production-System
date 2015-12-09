@@ -1,9 +1,17 @@
 Obj:
 1 D
-2 sqrt(D)
-3 (sqrt(D))*(sqrt(D))
-
+2 A
+3 B
+4 C
+5 (A)*(A)
+6 +(C)+(B)
+7 sqrt_(A)
+8 +(sqrt_(A))*(sqrt_(A))+(A)*(A)+(A)
 Bon:
 
 
 Rul:
+IF +(obj1)+(obj2) THEN +(obj1)+(obj2) equals +(obj2)+(obj1)
+IF (sqrt_(obj1))*(sqrt_(obj1)) THEN (sqrt_(obj1))*(sqrt_(obj1)) equals (obj1)
+IF (sqrt_(obj1))^2 THEN (sqrt_(obj1))^2 equals (obj1)
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2

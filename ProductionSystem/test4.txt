@@ -1,0 +1,31 @@
+Obj:
+1 D
+2 A
+3 B
+4 C
+5 T1
+6 T2
+7 (+(B)-(sqrt_(D)))/2
+8 (+(B)+(sqrt_(D)))/2
+9 +(T1)+(T2)
+10 (D)/2
+11 (B)/2
+12 +(T1)*(T2)
+13 sqrt_(D)
+Bon:
+5 equals 7
+6 equals 8
+
+Rul:
+IF (+(obj1)+(obj2))/2 THEN (+(obj1)+(obj2))/2 equals +((obj1)/2)+((obj2)/2)
+IF (+(obj1)-(obj2))/2 THEN (+(obj1)-(obj2))/2 equals +((obj1)/2)-((obj2)/2)
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2
+IF 2*((obj1)/2) THEN 2*((obj1)/2) equals 1*(obj1)
+IF 1*(obj1) THEN 1*(obj1) equals (obj1)
+IF +2*((obj1)/2) THEN +2*((obj1)/2) equals +1*(obj1)
+IF +1*(obj1) THEN +1*(obj1) equals +(obj1)
+IF (sqrt_(obj1))*(sqrt_(obj1)) THEN (sqrt_(obj1))*(sqrt_(obj1)) equals (obj1)
+IF (sqrt_(obj1)/2)*(sqrt_(obj1)/2) THEN (sqrt_(obj1)/2)*(sqrt_(obj1)/2) equals (obj1)/4
+IF (sqrt_(obj1))^2 THEN (sqrt_(obj1))^2 equals (obj1)
+IF (sqrt_(obj1)/2)^2 THEN (sqrt_(obj1)/2)^2 equals (obj1)/4
+IF 4*((obj1)/4) THEN 4*((obj1)/4) equals 1*(obj1)

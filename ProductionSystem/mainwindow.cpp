@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     btnAnalyze = new QPushButton("Найти");
     QObject::connect(btnAnalyze,SIGNAL(clicked()),this,SLOT(findLine()));
 
-    lineFilePath = new QLineEdit();
+    lineFilePath = new QLineEdit("D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\ProductionSystem\\test.txt");
     findLineText = new QLineEdit();
 
     teObj=new QTextEdit();
@@ -71,8 +71,14 @@ void MainWindow::findLine()
     QString str=findLineText->text();
     if(!str.isEmpty())
     {
-        bool ok=false;
+        bool ok=false;/*
+        if(teRel->toPlainText().contains(str))
+        {
+            teRel->textCursor().setPosition(teRel->toPlainText().indexOf(str),);
+            ok=true;
+        }*/
         teRel->clear();
+
         Parser* pars =new Parser(lineFilePath->text());
         for(int i=0;i<pars->getNewRelations().size();i++)
         {
@@ -82,15 +88,16 @@ void MainWindow::findLine()
                 tmp = pars->getNewObjects()[rel.from]+" = "+pars->getNewObjects()[rel.to];
             else
                 tmp = pars->getNewObjects()[rel.from]+" "+rel.type+" "+pars->getNewObjects()[rel.to];
-            if(tmp==str)
+            if(tmp.contains(str))
             {
                 teRel->textCursor().insertText(tmp+"\n");
-                ok=true;
-                break;
+                ok=true;/*
+                break;*/
             }
         }
         if(!ok)
         {
+            teRel->clear();
             teRel->textCursor().insertText("Выражение не найдено!\n");
         }
     }

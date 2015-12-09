@@ -1,0 +1,23 @@
+Obj:
+1 D
+2 A
+3 B
+4 C
+5 +(D)
+6 +(A)
+7 +(B)
+8 +(C)
+9 +(A)/2
+10 +(C)/2
+11 x1
+12 x2
+13 +(x1)*(x2)
+14 (+(A)-(C))
+15 (+(A)+(C))
+Bon:
+15 equals 11
+14 equals 12
+
+Rul:
+IF (+(obj1)+(obj2))/2 THEN (+(obj1)+(obj2))/2 equals (+(obj1)/2)+(+(obj2)/2)
+IF (+(obj1)-(obj2))/2 THEN (+(obj1)-(obj2))/2 equals (+(obj1)/2)-(+(obj2)/2)
