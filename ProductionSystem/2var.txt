@@ -1,0 +1,134 @@
+QVector<QPair<QString,QString> > Parser::findNewObjWithRules(QMap<int,QString> objects, int startSize)
+{
+    QVector<QPair<QString,QString> > objsW;
+    for(int rule=0;rule<rules.size();rule++)
+    {
+        for(int m=startSize;m<=objects.size();m++)
+        {
+            for(int j=startSize;j<=objects.size();j++)
+            {
+                QString tmpStr;
+                QString str=rules[rule];
+                QString object1=objects[m];
+                QString object2=objects[j];
+
+                int i=0;
+                while(i!=str.size() && str[i]!=' ')
+                {
+                    tmpStr+=str[i];
+                    i++;
+                }
+                if(tmpStr=="IF")
+                {
+                    i++;
+                    tmpStr="";
+                    while(i!=str.size() && str[i]!='T')
+                    {
+                        tmpStr+=str[i];
+                        i++;
+                    }
+                    if(tmpStr.contains("obj"))
+                    {
+                        QString tmpWithObj=tmpStr;
+                        bool exist=false;
+                        tmpStr="";
+                        while(i!=str.size() && str[i]!=' ')
+                        {
+                            tmpStr+=str[i];
+                            i++;
+                        }
+                        if(tmpStr=="THEN")
+                        {
+                            i++;
+                            tmpStr="";
+                            while(i!=str.size() )
+                            {
+                                tmpStr+=str[i];
+                                i++;
+                            }
+                        }
+
+                        QString obj = tmpWithObj;
+                        obj=  obj.replace("obj1",object1);
+                        obj=  obj.replace("obj2",object2);
+                        obj.remove(' ');
+
+                        if(tmpStr.contains("obj"))
+                        {
+
+                            QString obj1 = tmpStr;
+                            obj1=  obj1.replace("obj1",object1);
+                            obj1=  obj1.replace("obj2",object2);
+                            //qDebug()<<obj<<" :: "<<obj1;
+                            if(obj1.contains("equals"))
+                            {
+                                QString firstNod = obj1.left(obj1.indexOf("equals"));
+                                QString secNod = obj1.right(obj1.size()-obj1.indexOf("equals")-6);
+                                firstNod.remove(' ');
+                                secNod.remove(' ');/*
+                   qDebug()<<"   FIRSTNODE:: "<<firstNod;
+                   qDebug()<<"   SECONDNODE:: "<<secNod;*/
+                                if (firstNod!="" && secNod!="")
+                                {
+                                    QPair<QString,QString> pair(firstNod,secNod);
+                                    objsW.push_back(pair);
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+    return objsW;
+}
+
+//Правила:
+            for(int l=0;l<objWRules.size();l++)
+            {
+                QString firstNod = objWRules[l].first;
+                QString secNod = objWRules[l].second;
+                if(firstNod==objects[i])
+                {
+                    if(!isSameNewObjects(secNod))
+                    {
+                        newObjects[newObjects.size()+1]=secNod;
+                        Relation rel(i,newObjects.size(),"equals");
+                        newRelations.push_back(rel);
+                        qDebug()<<"*"<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                        found= true;
+                    }
+                    else
+                    {
+                        Relation rel(i,newObjects.key(secNod,-1),"equals");
+                        if(newObjects.key(secNod,-1)==-1)
+                        {
+                            secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                            if(newObjects.key(secNod,-1)==-1)
+                                secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                            rel.to=newObjects.key(secNod,-1);
+                        }
+                        if(newObjects.key(secNod,-1)!=-1 && !isSameRelations(rel))
+                        {
+                            newRelations.push_back(rel);
+                            qDebug()<<"**"<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                            //found= true;
+                        }
+                    }
+                }
+                else
+                    if(objects[i].contains(firstNod))
+                    {
+                        QString newObj = objects[i];
+                        newObj=newObj.replace(newObj.indexOf(firstNod),firstNod.size(),secNod);
+                        if(!isSameNewObjects(newObj))
+                        {
+                            newObjects[newObjects.size()+1]=newObj;
+                            Relation rel(i,newObjects.size(),"equals");
+                            newRelations.push_back(rel);
+                            qDebug()<<"***"<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                            found= true;
+                        }
+                    }
+            }

@@ -1,0 +1,32 @@
+Obj:
+1 D
+2 +(B)*(B)-4*(C)
+3 B
+4 C
+5 T1
+6 T2
+7 (+(B)-(sqrt_(D)))/2
+8 (+(B)+(sqrt_(D)))/2
+9 +(T1)+(T2)
+10 (D)/4
+11 (B)/2
+12 R
+13 sqrt_(D)
+14 (sqrt_(D))/2
+15 ((B)^2)/4
+16 4*(C)
+Bon:
+5 equals 7
+6 equals 8
+1 equals 2
+
+Rul:
+IF (+(obj1)+(obj2))/2 THEN (+(obj1)+(obj2))/2 equals +((obj1)/2)+((obj2)/2)
+IF (+(obj1)-(obj2))/2 THEN (+(obj1)-(obj2))/2 equals +((obj1)/2)-((obj2)/2)
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2
+IF 2*((obj1)/2) THEN 2*((obj1)/2) equals 1*(obj1)
+IF 1*(obj1) THEN 1*(obj1) equals (obj1)
+IF (sqrt_(obj1))*(sqrt_(obj1)) THEN (sqrt_(obj1))*(sqrt_(obj1)) equals (obj1)
+IF (sqrt_(obj1))^2 THEN (sqrt_(obj1))^2 equals (obj1)
+IF (sqrt_(obj1))*(sqrt_(obj1)) THEN (sqrt_(obj1))*(sqrt_(obj1)) equals (obj1)
+IF (obj1)*(obj2) THEN (obj1)*(obj2) equals (obj2)*(obj1)

@@ -1,0 +1,16 @@
+Obj:
+1 Night
+2 Cats
+3 Grey
+4 Color
+5 Day
+
+Bon:
+2 isA 1
+3 isA 4
+1 consist_of 4
+2 consist_of 4
+
+Rul:
+IF 1 consist_of 4 THEN 4 isA 3
+IF 2 consist_of 3 THEN 2 isA 3

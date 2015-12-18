@@ -1,0 +1,14 @@
+Obj:
+1 Socrat
+2 Man
+3 Deadly
+4 Eternel
+5 Philosopher
+
+Bon:
+1 isA 2
+2 isA 3
+5 isA 4
+1 isA 5
+
+Rul:

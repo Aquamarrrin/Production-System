@@ -3,15 +3,32 @@ Obj:
 2 A
 3 B
 4 C
-5 (A)*(A)
-6 +(C)+(B)
-7 sqrt_(A)
-8 +(sqrt_(A))*(sqrt_(A))+(A)*(A)+(A)
+5 (B)^2
+6 (sqrt_(A))/2
+7 4*(C)
+8 +((B)^2)-(4*(C))
+9 (B)/2
+10 (A)/4
+11 ((B)^2)/4
+12 -((B)/2)+((sqrt_(A))/2)
+13 -((B)/2)-((sqrt_(A))/2)
+14 +(T1)*(T2)
+15 (+((B)/2)*((B)/2)-((sqrt_(A))/2)*((B)/2)+((B)/2)*((sqrt_(A))/2)-((sqrt_(A))/2)*((sqrt_(A))/2))
 Bon:
-
+2 equals 8
+14 equals 15
 
 Rul:
-IF +(obj1)+(obj2) THEN +(obj1)+(obj2) equals +(obj2)+(obj1)
+IF (+(obj1)+(obj2))/4 THEN (+(obj1)+(obj2))/4 equals +((obj1)/4)+((obj2)/4)
+IF (+(obj1)-(obj2))/4 THEN (+(obj1)-(obj2))/4 equals +((obj1)/4)-((obj2)/4)
+IF (+(obj1)+(obj2))/2 THEN (+(obj1)+(obj2))/2 equals +((obj1)/2)+((obj2)/2)
+IF (+(obj1)-(obj2))/2 THEN (+(obj1)-(obj2))/2 equals +((obj1)/2)-((obj2)/2)
+IF ((sqrt_(obj1))/2)*((sqrt_(obj1))/2) THEN ((sqrt_(obj1))/2)*((sqrt_(obj1))/2) equals ((obj1)/4)
 IF (sqrt_(obj1))*(sqrt_(obj1)) THEN (sqrt_(obj1))*(sqrt_(obj1)) equals (obj1)
-IF (sqrt_(obj1))^2 THEN (sqrt_(obj1))^2 equals (obj1)
-IF (obj1)*(obj1) THEN (obj1)*(obj1) equals (obj1)^2
+IF ((sqrt_(obj1))^2) THEN ((sqrt_(obj1))^2) equals (obj1)
+IF ((sqrt_(obj1))/2)^2 THEN ((sqrt_(obj1))/2)^2 equals ((obj1)/4)
+IF (obj1)*(obj1) THEN (obj1)*(obj1) equals ((obj1)^2)
+IF (4*(obj1))/4 THEN (4*(obj1))/4 equals obj1
+IF ((obj1)/2)^2 THEN ((obj1)/2)^2 equals (((obj1)^2)/4)
+IF (obj1)*(obj2) THEN (obj1)*(obj2) equals (obj2)*(obj1)
+IF (obj1)*(+(obj1)) THEN (obj1)*(+(obj1)) equals ((obj1)^2)

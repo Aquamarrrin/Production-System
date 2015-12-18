@@ -2,6 +2,9 @@
 // D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\ProductionSystem\\viet.txt
 Parser::Parser(QString filePath)
 {
+    delta=0;
+    deltaRel=0;
+
     QFile myFile(filePath);
     if(!myFile.open(QFile::ReadOnly | QFile::Text))
     {
@@ -71,7 +74,7 @@ void Parser::findObjects(QString str)
     int num;
     int i=0;
 
-//СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
+    //СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
     //Вырезаем номер объекта
     while(str[i]!=' ' && i!=str.size())
     {
@@ -101,7 +104,7 @@ Relation Parser::findRelations(QString str)
     int to;
     int i=0;
 
-//СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
+    //СТОИТ ВВЕСТИ ЗДЕСЬ ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ НА СООТВЕТСТВИЕ СИМВОЛОВ ЧИСЛАМ
     //Вырезаем узел "от кого"
     while(str[i]!=' ' && i!=str.size())
     {
@@ -148,7 +151,7 @@ void Parser:: findRules(QString str)
     {
         i++;
         tmpStr="";
-        while(i!=str.size() && str[i]!='T')
+        while(i!=str.size() && str[i]!='T' && str[i]!='A')
         {
             tmpStr+=str[i];
             i++;
@@ -168,6 +171,68 @@ void Parser:: findRules(QString str)
                     tmpStr+=str[i];
                     i++;
                 }
+                if(tmpStr=="AND")
+                {
+                    i++;
+                    tmpStr="";
+                    while(i!=str.size() && str[i]!='T')
+                    {
+                        tmpStr+=str[i];
+                        i++;
+                    }
+                    if(isSameRelations(findRelations(tmpStr)))
+                    {
+                        tmpStr="";
+                        while(i!=str.size() && str[i]!=' ')
+                        {
+                            tmpStr+=str[i];
+                            i++;
+                        }
+                        if(tmpStr=="THEN")
+                        {
+                            i++;
+                            tmpStr="";
+                            while(i!=str.size() )
+                            {
+                                tmpStr+=str[i];
+                                i++;
+                            }
+                            if(!isSameRelations(findRelations(tmpStr)))
+                            {
+                                qDebug()<<"NEW REL IN RULES::"<<objects[findRelations(tmpStr).from]<<"--->"<<findRelations(tmpStr).type<<"--->"<<objects[findRelations(tmpStr).to];
+                                newRelations.push_back(findRelations(tmpStr));
+                            }
+                        }
+                    }
+                }
+                else
+                    if(tmpStr=="THEN")
+                    {
+                        i++;
+                        tmpStr="";
+                        while(i!=str.size() )
+                        {
+                            tmpStr+=str[i];
+                            i++;
+                        }
+                        if(!isSameRelations(findRelations(tmpStr)))
+                        {
+                            qDebug()<<"NEW REL IN RULES::"<<objects[findRelations(tmpStr).from]<<"--->"<<findRelations(tmpStr).type<<"--->"<<objects[findRelations(tmpStr).to];
+                            newRelations.push_back(findRelations(tmpStr));
+                        }
+                    }
+
+            }
+            else
+            {
+                QPair<Relation,Relation> pair;
+                pair.first=findRelations(tmpStr);
+                tmpStr="";
+                while(i!=str.size() && str[i]!=' ')
+                {
+                    tmpStr+=str[i];
+                    i++;
+                }
                 if(tmpStr=="THEN")
                 {
                     i++;
@@ -177,373 +242,211 @@ void Parser:: findRules(QString str)
                         tmpStr+=str[i];
                         i++;
                     }
-                    if(!isSameRelations(findRelations(tmpStr)))
-                    {
-                        qDebug()<<"NEW REL IN RULES::"<<objects[findRelations(tmpStr).from]<<"--->"<<findRelations(tmpStr).type<<"--->"<<objects[findRelations(tmpStr).to];
-                        newRelations.push_back(findRelations(tmpStr));
-                    }
+                    pair.second=findRelations(tmpStr);
+                    extraRelations.push_back(pair);
                 }
             }
     }
 
 }
 
-bool Parser::findNewObjWithRules(QMap<int,QString> objects, QString object1, QString object2, QString str)
-{
-    QString tmpStr;
-    bool found = false;
-    int i=0;
-    while(i!=str.size() && str[i]!=' ')
+void Parser::findNewObjWithRules(QMap<int,QString> objects, int startSize)
+{/*
+    QVector<QPair<QString,QString> > objsW;*/
+    for(int rule=0;rule<rules.size();rule++)
     {
-        tmpStr+=str[i];
-        i++;
-    }
-    if(tmpStr=="IF")
-    {
-        i++;
-        tmpStr="";
-        while(i!=str.size() && str[i]!='T')
+        for(int m=startSize;m<=objects.size();m++)
         {
-            tmpStr+=str[i];
-            i++;
-        }
-        if(tmpStr.contains("obj"))
-        {
-            QString tmpWithObj=tmpStr;
-            bool exist=false;
-            tmpStr="";
-            while(i!=str.size() && str[i]!=' ')
+            for(int j=startSize;j<=objects.size();j++)
             {
-                tmpStr+=str[i];
-                i++;
-            }
-            if(tmpStr=="THEN")
-            {
-                i++;
-                tmpStr="";
-                while(i!=str.size() )
+                QString tmpStr;
+                QString str=rules[rule];
+                QString object1=objects[m];
+                QString object2=objects[j];
+
+                if( object1.size()<20 && object2.size()<20)
                 {
-                    tmpStr+=str[i];
-                    i++;
-                }
-            }
+                    int i=0;
+                    while(i!=str.size() && str[i]!=' ')
+                    {
+                        tmpStr+=str[i];
+                        i++;
+                    }
+                    if(tmpStr=="IF")
+                    {
+                        i++;
+                        tmpStr="";
+                        while(i!=str.size() && str[i]!='T')
+                        {
+                            tmpStr+=str[i];
+                            i++;
+                        }
+                        if(tmpStr.contains("obj"))
+                        {
+                            QString tmpWithObj=tmpStr;
+                            bool exist=false;
+                            tmpStr="";
+                            while(i!=str.size() && str[i]!=' ')
+                            {
+                                tmpStr+=str[i];
+                                i++;
+                            }
+                            if(tmpStr=="THEN")
+                            {
+                                i++;
+                                tmpStr="";
+                                while(i!=str.size() )
+                                {
+                                    tmpStr+=str[i];
+                                    i++;
+                                }
+                            }
 
-            QString obj = tmpWithObj;
-            obj=  obj.replace("obj1",object1);
-            obj=  obj.replace("obj2",object2);
-            obj.remove(' ');
-            for(int l=1;l<=objects.size();l++)
-            {
-                //qDebug()<<objects[l]<<" ----> "<<obj;
-                if(objects[l].contains(obj))
-                {/*
-                    qDebug()<<"RULE::"<<str;
-                    qDebug()<<" OBJ:: "<<obj;
-                    qDebug()<<" OBJ[l]:: "<<objects[l] ;
-                    qDebug()<<" TMPSTR:: "<<tmpStr ;*/
-                    exist=true;
-                    break;
-                }
-            }
+                            QString obj = tmpWithObj;
+                            obj=  obj.replace("obj1",object1);
+                            obj=  obj.replace("obj2",object2);
+                            obj.remove(' ');
 
-            if(exist && tmpStr.contains("obj"))
-            {
+                            if(tmpStr.contains("obj"))
+                            {
 
-                QString obj1 = tmpStr;
-                obj1=  obj1.replace("obj1",object1);
-                obj1=  obj1.replace("obj2",object2);
-                //qDebug()<<obj<<" :: "<<obj1;
-                if(obj1.contains("equals"))
-                {
-                    QString firstNod = obj1.left(obj1.indexOf("equals"));
-                    QString secNod = obj1.right(obj1.size()-obj1.indexOf("equals")-6);
-                    firstNod.remove(' ');
-                    secNod.remove(' ');/*
+                                QString obj1 = tmpStr;
+                                obj1=  obj1.replace("obj1",object1);
+                                obj1=  obj1.replace("obj2",object2);
+                                //qDebug()<<obj<<" :: "<<obj1;
+                                if(obj1.contains("equals"))
+                                {
+                                    QString firstNod = obj1.left(obj1.indexOf("equals"));
+                                    QString secNod = obj1.right(obj1.size()-obj1.indexOf("equals")-6);
+                                    firstNod.remove(' ');
+                                    secNod.remove(' ');/*
                    qDebug()<<"   FIRSTNODE:: "<<firstNod;
                    qDebug()<<"   SECONDNODE:: "<<secNod;*/
-                    if (firstNod!="" && secNod!="")
-                    {
-                        for(int l=1;l<=objects.size();l++)
-                        {
-                            if(firstNod==objects[l])
-                            {
-                                if(!isSameNewObjects(secNod))
-                                {
-                                    newObjects[newObjects.size()+1]=secNod;
-                                    Relation rel(l,newObjects.size(),"equals");
-                                    newRelations.push_back(rel);
-                                    qDebug()<<"*"<<rel.from<<rel.type<<rel.to;
-                                    found= true;
-                                }
-                                else
-                                {
-                                    Relation rel(l,newObjects.key(secNod,-1),"equals");
-                                    if(newObjects.key(secNod,-1)==-1)
+                                    if (firstNod!="" && secNod!="")
                                     {
-                                        secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
-                                        if(newObjects.key(secNod,-1)==-1)
-                                            secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
-                                        rel.to=newObjects.key(secNod,-1);
-                                    }
-                                    if(newObjects.key(secNod,-1)!=-1 && !isSameRelations(rel))
-                                    {
-                                        newRelations.push_back(rel);
-                                        qDebug()<<"**"<<rel.from<<rel.type<<rel.to;
-                                        //found= true;
+                                        QPair<QString,QString> pair(firstNod,secNod);
+                                        if(!objWRules.contains(pair))
+                                            objWRules.push_back(pair);
                                     }
                                 }
                             }
-                            else
-                                if(objects[l].contains(firstNod))
-                                {
-                                    if(!isSameNewObjects(firstNod))
-                                    {
-                                        newObjects[newObjects.size()+1]=firstNod;
-                                        if(!isSameNewObjects(secNod))
-                                        {
-                                            newObjects[newObjects.size()+1]=secNod;
-                                            Relation rel(newObjects.size()-1,newObjects.size(),"equals");
-                                            newRelations.push_back(rel);
-                                            qDebug()<<"***"<<rel.from<<rel.type<<rel.to;
-                                            found= true;
-                                        }
-                                        else
-                                        {
-                                            Relation rel(newObjects.size(),newObjects.key(secNod),"equals");
-                                            if(!isSameRelations(rel))
-                                            {
-                                                newRelations.push_back(rel);
-                                                qDebug()<<"****"<<rel.from<<rel.type<<rel.to;
-                                                //found= true;
-                                            }
-                                        }
-                                    }
-                                }
+
                         }
                     }
                 }
             }
-
         }
-    }
-    return found;
+    }/*
+    return objsW;*/
 }
 
 //Нахождение новых объектов
 bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relations)
 {
     bool found = false;
+    qDebug()<<"--------------------------------------------------";
+    qDebug()<<objects.size();
 
-    for(int i=1;i<=objects.size();i++)
+    int startSize=1;
+    if(delta==0)
+        startSize=1;
+    else
+        startSize=objects.size()-delta;
+    qDebug()<<startSize;
+
+    findNewObjWithRules(objects,startSize);
+    qDebug()<<objWRules.size();
+
+    qDebug()<<"--------------------------------------------------";
+    if(objects.key("(+(C))",-1)==-1)
     {
-        //relations=newRelations;
-        for(int j=1;j<=objects.size();j++)
-        {
-            //qDebug();
-            if(objects[j].contains(objects[i]))  //подставляем равнозначные значения
+        //Правила:
+        for(int i=startSize;i<=objects.size();i++)
+            for(int l=0;l<objWRules.size();l++)
             {
-                for(int k=0;k<relations.size();k++ )
+                QString firstNod = objWRules[l].first;
+                QString secNod = objWRules[l].second;
+                if(firstNod==objects[i])
                 {
-                    QString tmpStr3=objects[j];
-                    QString tmpStr4=objects[j];
-                    QString tmpStr1;
-                    QString tmpStr2;
-                    int indexOFObj=tmpStr3.indexOf(objects[i]);
-                    if(indexOFObj>0 && indexOFObj+objects[i].size()<tmpStr3.size() && tmpStr3[indexOFObj-1]=='('
-                            && tmpStr3[indexOFObj+objects[i].size()]==')')
+                    if(!isSameNewObjects(secNod))
                     {
-                        tmpStr1 = tmpStr3.replace(objects[i],objects[relations[k].to]);
-                        tmpStr2 = tmpStr4.replace(objects[i],objects[relations[k].from]);
-                        tmpStr1=deletePlusesAndScobes(tmpStr1,objects[relations[k].to]);
-                        tmpStr2=deletePlusesAndScobes(tmpStr2,objects[relations[k].from]);
-
-                        if(relations[k].from==i && relations[k].type=="equals"      //Если содержит объект, вместо него подставляется равный ему другой объект
-                                && tmpStr1!="" && !isSameNewObjects(tmpStr1)            //Но только в том случае, если в "главном" объекте уже не содержится
-                                && (((objects[i].size()<objects[relations[k].to].size() //"подставляемый" объект, а в нем не содержится тот, вместо которого подставляют
-                                      && !objects[relations[k].to].contains(objects[i]))
-                                     || objects[i].size()>=objects[relations[k].to].size() ) ) )
+                        newObjects[newObjects.size()+1]=secNod;
+                        Relation rel(i,newObjects.size(),"equals");
+                        newRelations.push_back(rel);
+                        qDebug()<<"*"<<firstNod<<secNod;
+                        found= true;
+                    }
+                    else
+                    {
+                        Relation rel(i,newObjects.key(secNod,-1),"equals");
+                        if(newObjects.key(secNod,-1)==-1)
                         {
-                            qDebug()<<"FROM:::"<<objects[j]<<"USE:::"<<objects[relations[k].to]<<"TO::"<<tmpStr1;
-                            newObjects[newObjects.size()+1]=tmpStr1;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr1;
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
+                            secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                            if(newObjects.key(secNod,-1)==-1)
+                                secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                            rel.to=newObjects.key(secNod,-1);
                         }
-                        else
-                            if(relations[k].to==i && relations[k].type=="equals"
-                                    && tmpStr2!="" && !isSameNewObjects(tmpStr2)
-                                    && (((objects[i].size()<objects[relations[k].from].size() &&!objects[relations[k].from].contains(objects[i]))
-                                         || objects[i].size()>=objects[relations[k].from].size()  ) ))
+                        if(newObjects.key(secNod,-1)!=-1 && !isSameRelations(rel))
+                        {
+                            newRelations.push_back(rel);
+                            qDebug()<<"**"<<i<<"::"<<l<<firstNod<<secNod;
+                            //found= true;
+                        }
+                    }
+                }
+                else
+                    if(objects[i].contains(firstNod))
+                    {
+                        if(!isSameNewObjects(firstNod))
+                        {
+                            if(!isSameNewObjects(secNod))
                             {
-                                qDebug()<<"FROM:::"<<objects[j]<<"USE:::"<<objects[relations[k].from]<<"TO::"<<tmpStr2;
-                                newObjects[newObjects.size()+1]=tmpStr2;
-                                // qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr2;
-                                Relation rel(j,newObjects.size(),"equals");
+                                newObjects[newObjects.size()+1]=firstNod;
+                                newObjects[newObjects.size()+1]=secNod;
+                                Relation rel(newObjects.size()-1,newObjects.size(),"equals");
                                 newRelations.push_back(rel);
-                                found=true;
+                                qDebug()<<"***"<<firstNod<<secNod;
+                                found= true;
                             }
-                    }
-                }
-
-            }
-
-            if((objects[j].contains("+("+objects[i]+")") &&  (objects[j].contains("-("+objects[i]+")")))) //вычитаем с разными знаками
-            {
-                QString tmpStr1 = findOpenScob(objects[j],"+("+objects[i]+")")+findCloseScob(objects[j],"+("+objects[i]+")");
-                //qDebug()<<"1ST::"<<tmpStr1;
-                if(tmpStr1.contains("-("+objects[i]+")"))
-                {
-                    QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
-                    QString tmpStr4=deleteOppositeObjs(tmpStr1,objects[i],cutF1);
-                    //qDebug()<<"2ND::"<<tmpStr4;
-                    if(tmpStr4!="" )
-                    {
-                        QString tmpStr2 = objects[j];
-                        tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
-                        //qDebug()<<"3RD::"<<tmpStr4;
-                        //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                        if(!isSameNewObjects(tmpStr4))
-                        {
-                            qDebug()<<"+-::"<<tmpStr4;
-                            newObjects[newObjects.size()+1]=tmpStr4;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
+                            else
+                            {
+                                newObjects[newObjects.size()+1]=firstNod;
+                                Relation rel(newObjects.size(),newObjects.key(secNod,-1),"equals");
+                                if(newObjects.key(secNod,-1)==-1)
+                                {
+                                    secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                                    if(newObjects.key(secNod,-1)==-1)
+                                        secNod=secNod.remove(secNod.size()-1,1).remove(0,1);
+                                    rel.to=newObjects.key(secNod,-1);
+                                }
+                                if(newObjects.key(secNod,-1)!=-1 && !isSameRelations(rel))
+                                {
+                                    newRelations.push_back(rel);
+                                    qDebug()<<"****"<<i<<"::"<<l<<firstNod<<secNod;
+                                    //found= true;
+                                }
+                            }
                         }
                     }
-                }
             }
 
-            //qDebug()<<objects[j]<<"  :  "<<objects[i]<<"  :  "<<cutF;
-            if((objects[j].contains("+("+objects[i]+")") )) //складываем одинаковые
-            {
-                QString tmpStr1 = findOpenScob(objects[j],"+("+objects[i]+")")+findCloseScob(objects[j],"+("+objects[i]+")");
-               // qDebug()<<"1ST::"<<tmpStr1;
-                if(tmpStr1.count("+("+objects[i]+")")>1)
-                {
-                    QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
-                    QString tmpStr4=plusMinusSameObjs(1,tmpStr1,objects[i],cutF1);
-                 //   qDebug()<<"2ND::"<<tmpStr4;
-                    if(tmpStr4!="" )
-                    {
-                        QString tmpStr2 = objects[j];
-                        tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
-                    //    qDebug()<<"3RD::"<<tmpStr4;
-                        //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                        if(!isSameNewObjects(tmpStr4))
-                        {
-                            qDebug()<<"+::"<<tmpStr4;
-                            newObjects[newObjects.size()+1]=tmpStr4;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
-                        }
-                    }
-                }
-            }
 
-            if((objects[j].contains("-("+objects[i]+")") )) //вычитаем одинаковые
-            {
-                QString tmpStr1 = findOpenScob(objects[j],"-("+objects[i]+")")+findCloseScob(objects[j],"-("+objects[i]+")");
-               // qDebug()<<"1ST::"<<tmpStr1;
-                if(tmpStr1.count("-("+objects[i]+")")>1)
-                {
-                    QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
-                    QString tmpStr4=plusMinusSameObjs(0,tmpStr1,objects[i],cutF1);
-                 //   qDebug()<<"2ND::"<<tmpStr4;
-                    if(tmpStr4!="" )
-                    {
-                        QString tmpStr2 = objects[j];
-                        tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
-                     //   qDebug()<<"3RD::"<<tmpStr4;
-                        //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                        if(!isSameNewObjects(tmpStr4))
-                        {
-                            qDebug()<<"-::"<<tmpStr4;
-                            newObjects[newObjects.size()+1]=tmpStr4;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
-                        }
-                    }
-                }
-            }
 
-            if(objects[j].contains("("+objects[i]+")*")) //выносим за скобки
-            {
-                QString tmpStr1 = findOpenScob(objects[j],"("+objects[i]+")*")+findCloseScob(objects[j],"("+objects[i]+")*");
-             //   qDebug()<<"1ST::"<<tmpStr1<<"OBJ[i]::"<<objects[i];
-                if(tmpStr1.count("("+objects[i]+")*")>1)
-                {
-                    QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
-                    QString tmpStr4=outOfScobsSameObjs(0,tmpStr1,objects[i],cutF1);
-                //    qDebug()<<"2ND::"<<tmpStr4;
-                    if(tmpStr4!="" )
-                    {
-                        QString tmpStr2 = objects[j];
-                        tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
-                  //      qDebug()<<"3RD::"<<tmpStr4;
-                        //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                        if(!isSameNewObjects(tmpStr4))
-                        {
-                            qDebug()<<")*::"<<tmpStr4;
-                            newObjects[newObjects.size()+1]=tmpStr4;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
-                        }
-                    }
-                }
-               // qDebug()<<" *************************************************** ";
-            }
-
-            if(objects[j].contains("*("+objects[i]+")")) //выносим за скобки
-            {
-                QString tmpStr1 = findOpenScob(objects[j],"*("+objects[i]+")")+findCloseScob(objects[j],"*("+objects[i]+")");
-                //qDebug()<<"1ST::"<<tmpStr1<<"OBJ[i]::"<<objects[i];
-                if(tmpStr1.count("*("+objects[i]+")")>1)
-                {
-                    QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
-                    QString tmpStr4=outOfScobsSameObjs(1,tmpStr1,objects[i],cutF1);
-                    //qDebug()<<"2ND::"<<tmpStr4;
-                    if(tmpStr4!="" )
-                    {
-                        QString tmpStr2 = objects[j];
-                        tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
-                      //  qDebug()<<"3RD::"<<tmpStr4;
-                       // tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                        if(!isSameNewObjects(tmpStr4))
-                        {
-                            qDebug()<<"*(::"<<tmpStr4;
-                            newObjects[newObjects.size()+1]=tmpStr4;
-                            //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                            Relation rel(j,newObjects.size(),"equals");
-                            newRelations.push_back(rel);
-                            found=true;
-                        }
-                    }
-                }
-              //  qDebug()<<" *************************************************** ";
-            }
-
-            if(objects[j].contains(")*(")) //Перемножаем 2 объекта
+        for(int j=startSize;j<=objects.size();j++)
+        {
+            //Объект
+            if(objects[j].contains(")*(") && objects[j].size()<90) //Перемножаем 2 объекта
             {
                 QString tmpStr1=findExpBeforeSim(objects[j],")*(");
                 QString tmpStr2=findExpAfterSim(objects[j],")*(");
                 if((tmpStr1.contains('-') || tmpStr1.contains('+'))&&(tmpStr2.contains('-') || tmpStr2.contains('+')))
                 {
                     QString tmpStr4=multTwoObjs(objects[j],tmpStr1,tmpStr2);
-                   tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                    tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
                     if(tmpStr4!="" && !isSameNewObjects(tmpStr4))
                     {
                         qDebug()<<")*(::"<<tmpStr4;
                         newObjects[newObjects.size()+1]=tmpStr4;
-                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
                         Relation rel(j,newObjects.size(),"equals");
                         newRelations.push_back(rel);
                         found=true;
@@ -555,73 +458,309 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
             {
                 QString tmpStr1=findExpBeforeSim(objects[j],")+(");
                 QString tmpStr2=findExpAfterSim(objects[j],")+(");
-                if((tmpStr1.contains('-') || tmpStr1.contains('+'))&&(tmpStr2.contains('-') || tmpStr2.contains('+')))
+                //                if((tmpStr1.contains('-') || tmpStr1.contains('+'))&&(tmpStr2.contains('-') || tmpStr2.contains('+')))
+                //                {
+                QString tmpStr4=plusTwoObjs(objects[j],tmpStr1,tmpStr2);
+                tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                if(tmpStr4!="" && !isSameNewObjects(tmpStr4))
                 {
-                    QString tmpStr4=plusTwoObjs(objects[j],tmpStr1,tmpStr2);
-                   tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                    if(tmpStr4!="" && !isSameNewObjects(tmpStr4))
-                    {
-                        qDebug()<<")+(::"<<tmpStr4;
-                        newObjects[newObjects.size()+1]=tmpStr4;
-                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                        Relation rel(j,newObjects.size(),"equals");
-                        newRelations.push_back(rel);
-                        found=true;
-                    }
+                    qDebug()<<")+(::"<<tmpStr4;
+                    newObjects[newObjects.size()+1]=tmpStr4;
+                    //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    Relation rel(j,newObjects.size(),"equals");
+                    newRelations.push_back(rel);
+                    found=true;
                 }
+                //}
             }
 
             if(objects[j].contains(")-(")) //Вычитаем 2 сложных объекта
             {
                 QString tmpStr1=findExpBeforeSim(objects[j],")-(");
                 QString tmpStr2=findExpAfterSim(objects[j],")-(");
-                if((tmpStr1.contains('-') || tmpStr1.contains('+'))&&(tmpStr2.contains('-') || tmpStr2.contains('+')))
+                //if((tmpStr1.contains('-') || tmpStr1.contains('+'))&&(tmpStr2.contains('-') || tmpStr2.contains('+')))
+                //{
+                QString tmpStr4=plusTwoObjs(objects[j],tmpStr1,tmpStr2);
+                tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                //qDebug()<<objects[j]<<"::"<<tmpStr1<<"::"<<tmpStr2;
+                if(tmpStr4!="" && !isSameNewObjects(tmpStr4))
                 {
-                    QString tmpStr4=plusTwoObjs(objects[j],tmpStr1,tmpStr2);
-                   tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
-                    if(tmpStr4!="" && !isSameNewObjects(tmpStr4))
-                    {
-                        qDebug()<<")-(::"<<tmpStr4;
-                        newObjects[newObjects.size()+1]=tmpStr4;
-                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
-                        Relation rel(j,newObjects.size(),"equals");
-                        newRelations.push_back(rel);
-                        found=true;
-                    }
-                }
-            }
-
-            if(objects[j].contains("(-("+objects[i]+"))")) //Убираем знак - ,там где он не нужен
-            {
-                QString tmpStr1=objects[j];
-                int ind1 = tmpStr1.lastIndexOf('+', tmpStr1.indexOf("-("+objects[i]+")")-1);
-                int ind2 = tmpStr1.lastIndexOf('-', tmpStr1.indexOf("-("+objects[i]+")")-1);
-                if(ind2>ind1)
-                    tmpStr1[ind2]='+';
-                if(ind2<ind1)
-                    tmpStr1[ind1]='-';
-                tmpStr1=tmpStr1.replace("(-("+objects[i]+"))","("+objects[i]+")");
-               // tmpStr1=deleteScobs(deleteDoublePM(tmpStr1));
-                if(tmpStr1!="" && !isSameNewObjects(tmpStr1))
-                {
-                    qDebug()<<"--::"<<tmpStr1;
-                    newObjects[newObjects.size()+1]=tmpStr1;
-                    //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                    qDebug()<<")-(::"<<tmpStr4;
+                    newObjects[newObjects.size()+1]=tmpStr4;
+                    //<<" : "<<newObjects[newObjects.size()];
                     Relation rel(j,newObjects.size(),"equals");
                     newRelations.push_back(rel);
                     found=true;
                 }
+                //}
             }
 
-            for(int rule=0;rule<rules.size();rule++)
+            //Объект в объекте:
+            for(int i=1;i<=objects.size();i++)
             {
-                if(findNewObjWithRules(objects,objects[i],objects[j],rules[rule]))
-                    found=true;
+                if(objects[i].size()<=objects[j].size() && objects[j].size()<=95)
+                {
+                    if(objects[j].contains(objects[i]))
+                    {
+                        if((objects[j].contains("+("+objects[i]+")") && (objects[j].contains("-("+objects[i]+")")))) //сокращаем одинаковые с разными знаками
+                        {
+                            QString tmpStr1 = findOpenScob(objects[j],"+("+objects[i]+")")+findCloseScob(objects[j],"+("+objects[i]+")");
+                            //qDebug()<<"1ST::"<<objects[j]<<"TMPSTR"<<tmpStr1;
+                            if(tmpStr1.contains("-("+objects[i]+")"))
+                            {
+                                QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
+                                QString tmpStr4=deleteOppositeObjs(tmpStr1,objects[i],cutF1);
+                                //qDebug()<<"2ND::"<<tmpStr4;
+                                if(tmpStr4!="" )
+                                {
+                                    QString tmpStr2 = objects[j];
+                                    tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
+                                    //qDebug()<<"3RD::"<<tmpStr4;
+                                    //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                                    if(tmpStr4.contains("*()"))
+                                    {
+                                        int index1=tmpStr4.lastIndexOf("+",tmpStr4.indexOf("*()"));
+                                        int index2=tmpStr4.lastIndexOf("-",tmpStr4.indexOf("*()"));
+                                        int index3=tmpStr4.lastIndexOf("sqrt_",tmpStr4.indexOf("*()"));
+                                        if(index1>index2 && (index3==-1 || index3>index1))
+                                            tmpStr4.remove(index1,tmpStr4.indexOf("*()")+3-index1);
+                                        if(index1<index2 && (index3==-1 || index3>index2))
+                                            tmpStr4.remove(index2,tmpStr4.indexOf("*()")+3-index2);
+                                        if(index3!=-1 && index3<index1)
+                                        {
+                                            index1=tmpStr4.lastIndexOf("+",index3);
+                                            tmpStr4.remove(index1,tmpStr4.indexOf("*()")+3-index1);
+                                        }
+                                        if(index3!=-1 && index3<index2)
+                                        {
+                                            index2=tmpStr4.lastIndexOf("-",index3);
+                                            tmpStr4.remove(index2,tmpStr4.indexOf("*()")+3-index2);
+                                        }
+                                    }
+                                    if(!isSameNewObjects(tmpStr4))
+                                    {
+                                        qDebug()<<"+-::"<<tmpStr4;
+                                        newObjects[newObjects.size()+1]=tmpStr4;
+                                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if((objects[j].contains("+("+objects[i]+")") )) //складываем одинаковые
+                        {
+                            QString tmpStr1 = findOpenScob(objects[j],"+("+objects[i]+")")+findCloseScob(objects[j],"+("+objects[i]+")");
+                            // qDebug()<<"1ST::"<<tmpStr1;
+                            if(tmpStr1.count("+("+objects[i]+")")>1)
+                            {
+                                QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
+                                QString tmpStr4=plusMinusSameObjs(1,tmpStr1,objects[i],cutF1);
+                                //   qDebug()<<"2ND::"<<tmpStr4;
+                                if(tmpStr4!="" )
+                                {
+                                    QString tmpStr2 = objects[j];
+                                    tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
+                                    //    qDebug()<<"3RD::"<<tmpStr4;
+                                    //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                                    if(!isSameNewObjects(tmpStr4))
+                                    {
+                                        qDebug()<<"+::"<<tmpStr4;
+                                        newObjects[newObjects.size()+1]=tmpStr4;
+                                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                                }
+                            }
+                        }
+
+
+                        if((objects[j].contains("-("+objects[i]+")") )) //вычитаем одинаковые
+                        {
+                            QString tmpStr1 = findOpenScob(objects[j],"-("+objects[i]+")")+findCloseScob(objects[j],"-("+objects[i]+")");
+                            // qDebug()<<"1ST::"<<tmpStr1;
+                            if(tmpStr1.count("-("+objects[i]+")")>1)
+                            {
+                                QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
+                                QString tmpStr4=plusMinusSameObjs(0,tmpStr1,objects[i],cutF1);
+                                //   qDebug()<<"2ND::"<<tmpStr4;
+                                if(tmpStr4!="" )
+                                {
+                                    QString tmpStr2 = objects[j];
+                                    tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
+                                    //   qDebug()<<"3RD::"<<tmpStr4;
+                                    //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                                    if(!isSameNewObjects(tmpStr4))
+                                    {
+                                        qDebug()<<"-::"<<tmpStr4;
+                                        newObjects[newObjects.size()+1]=tmpStr4;
+                                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if(objects[j].contains("("+objects[i]+")*")) //выносим за скобки
+                        {
+                            QString tmpStr1 = findOpenScob(objects[j],"("+objects[i]+")*")+findCloseScob(objects[j],"("+objects[i]+")*");
+                            //   qDebug()<<"1ST::"<<tmpStr1<<"OBJ[i]::"<<objects[i];
+                            if(tmpStr1.count("("+objects[i]+")*")>1)
+                            {
+                                QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
+                                QString tmpStr4=outOfScobsSameObjs(0,tmpStr1,objects[i],cutF1);
+                                //    qDebug()<<"2ND::"<<tmpStr4;
+                                if(tmpStr4!="" && !tmpStr4.contains(")("))
+                                {
+                                    QString tmpStr2 = objects[j];
+                                    tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
+                                    //      qDebug()<<"3RD::"<<tmpStr4;
+                                    //tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                                    if(!isSameNewObjects(tmpStr4))
+                                    {
+                                        qDebug()<<")*::"<<tmpStr4;
+                                        newObjects[newObjects.size()+1]=tmpStr4;
+                                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                                }
+                            }
+                            // qDebug()<<" *************************************************** ";
+                        }
+
+                        if(objects[j].contains("*("+objects[i]+")")) //выносим за скобки
+                        {
+                            QString tmpStr1 = findOpenScob(objects[j],"*("+objects[i]+")")+findCloseScob(objects[j],"*("+objects[i]+")");
+                            //qDebug()<<"1ST::"<<tmpStr1<<"OBJ[i]::"<<objects[i];
+                            if(tmpStr1.count("*("+objects[i]+")")>1)
+                            {
+                                QVector<QPair<int,QString> > cutF1 = cutFunc(tmpStr1,"sqrt_");
+                                QString tmpStr4=outOfScobsSameObjs(1,tmpStr1,objects[i],cutF1);
+                                //qDebug()<<"2ND::"<<tmpStr4;
+                                if(tmpStr4!=""  && !tmpStr4.contains(")("))
+                                {
+                                    QString tmpStr2 = objects[j];
+                                    tmpStr4=tmpStr2.replace(tmpStr1,tmpStr4);
+                                    //  qDebug()<<"3RD::"<<tmpStr4;
+                                    // tmpStr4=deleteScobs(deleteDoublePM(tmpStr4));
+                                    if(!isSameNewObjects(tmpStr4))
+                                    {
+                                        qDebug()<<"*(::"<<tmpStr4;
+                                        newObjects[newObjects.size()+1]=tmpStr4;
+                                        //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if(objects[j].contains("(-("+objects[i]+"))")) //Убираем знак - ,там где он не нужен
+                        {
+                            QString tmpStr1=objects[j];
+                            int ind1 = tmpStr1.lastIndexOf('+', tmpStr1.indexOf("-("+objects[i]+")")-1);
+                            int ind2 = tmpStr1.lastIndexOf('-', tmpStr1.indexOf("-("+objects[i]+")")-1);
+                            if(ind2>ind1)
+                                tmpStr1[ind2]='+';
+                            if(ind2<ind1)
+                                tmpStr1[ind1]='-';
+                            tmpStr1=tmpStr1.replace("(-("+objects[i]+"))","("+objects[i]+")");
+                            // tmpStr1=deleteScobs(deleteDoublePM(tmpStr1));
+                            if(tmpStr1!="" && !isSameNewObjects(tmpStr1))
+                            {
+                                qDebug()<<"--::"<<tmpStr1;
+                                newObjects[newObjects.size()+1]=tmpStr1;
+                                //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                Relation rel(j,newObjects.size(),"equals");
+                                newRelations.push_back(rel);
+                                found=true;
+                            }
+                        }
+
+                        if(objects[j].contains("(+("+objects[i]+"))")) //Убираем знак + ,там где он не нужен
+                        {
+                            QString tmpStr1=deletePlusesAndScobes(objects[j],objects[i]);
+                            if(tmpStr1!="" && !isSameNewObjects(tmpStr1))
+                            {
+                                qDebug()<<"++::"<<tmpStr1;
+                                newObjects[newObjects.size()+1]=tmpStr1;
+                                //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<newObjects[newObjects.size()];
+                                Relation rel(j,newObjects.size(),"equals");
+                                newRelations.push_back(rel);
+                                found=true;
+                            }
+                        }
+
+                        //                        if(newObjects.key("+(C)",-1)!=-1)
+                        //                            break;
+
+                        //qDebug()<<objects[j]<<objects[i];
+                        for(int k=0;k<relations.size();k++ )//подставляем равнозначные значения
+                        {
+                            QString tmpStr3=objects[j];
+                            QString tmpStr4=objects[j];
+                            QString tmpStr1;
+                            QString tmpStr2;
+                            int indexOFObj=tmpStr3.indexOf(objects[i]);/*
+                    if(objects[j]=="(+(AC)*(AC)+(BC)*(BC))")
+                        qDebug()<<"objects[j]:::"<<objects[j]<<"objects[i]:::"<<objects[i];*/
+                            if(indexOFObj>0 && ( (!objects[i].contains("+") && !objects[i].contains("-"))
+                                                 || (indexOFObj+objects[i].size()<tmpStr3.size() && tmpStr3[indexOFObj-1]=='('
+                                                     && tmpStr3[indexOFObj+objects[i].size()]==')') ))
+                            {
+                                tmpStr1 = tmpStr3.replace(objects[i],objects[relations[k].to]);
+                                tmpStr2 = tmpStr4.replace(objects[i],objects[relations[k].from]);
+                                tmpStr1=deletePlusesAndScobes(tmpStr1,objects[relations[k].to]);
+                                tmpStr2=deletePlusesAndScobes(tmpStr2,objects[relations[k].from]);
+                                //qDebug()<<"tmpStr2:::"<<tmpStr2;
+                                if(relations[k].from==i && relations[k].type=="equals"      //Если содержит объект, вместо него подставляется равный ему другой объект
+                                        && tmpStr1!="" && !isSameNewObjects(tmpStr1)            //Но только в том случае, если в "главном" объекте уже не содержится
+                                        && (((objects[i].size()<objects[relations[k].to].size() //"подставляемый" объект, а в нем не содержится тот, вместо которого подставляют
+                                              && !objects[relations[k].to].contains(objects[i]))
+                                             || objects[i].size()>=objects[relations[k].to].size() ) ) )
+                                {
+                                    qDebug()<<"FROM:::"<<objects[j]<<"USE:::"<<objects[relations[k].to]<<"TO::"<<tmpStr1;
+                                    newObjects[newObjects.size()+1]=tmpStr1;
+                                    //qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr1;
+                                    Relation rel(j,newObjects.size(),"equals");
+                                    newRelations.push_back(rel);
+                                    found=true;
+                                }
+                                else
+                                    if(relations[k].to==i && relations[k].type=="equals"
+                                            && tmpStr2!="" && !isSameNewObjects(tmpStr2)
+                                            && (((objects[i].size()<objects[relations[k].from].size() &&!objects[relations[k].from].contains(objects[i]))
+                                                 || objects[i].size()>=objects[relations[k].from].size()  ) ))
+                                    {
+                                        qDebug()<<"FROM:::"<<objects[j]<<"USE:::"<<objects[relations[k].from]<<"TO::"<<tmpStr2;
+                                        newObjects[newObjects.size()+1]=tmpStr2;
+                                        // qDebug()<<objects[i]<<" : "<<objects[j]<<" : "<<tmpStr2;
+                                        Relation rel(j,newObjects.size(),"equals");
+                                        newRelations.push_back(rel);
+                                        found=true;
+                                    }
+                            }
+                        }
+
+                    }
+                }
             }
         }
-
     }
+    else
+        found=false;
 
+    delta=this->newObjects.size()-objects.size();
+    //qDebug()<<delta;
     qDebug()<<found;
     return found;
 }
@@ -629,14 +768,83 @@ bool Parser::findNewObjects(QMap<int, QString> objects, QVector<Relation> relati
 bool Parser::findNewRelations(QVector<Relation> relations)
 {
     bool found=false;
+    int startSize=0;
+    if(deltaRel==0)
+        startSize=0;
+    else
+        startSize=relations.size()-deltaRel;
+    qDebug()<<startSize;
 
+    QVector<int> numsOfNeedObjs;
+    numsOfNeedObjs.push_back(objects.key("+(T1)*(T2)",-1));
+    numsOfNeedObjs.push_back(objects.key("+(T1)+(T2)",-1));
+    numsOfNeedObjs.push_back(objects.key("+(AC)*(AC)+(BC)*(BC)",-1));
+
+    for(int i=0;i<extraRelations.size();i++)
+    {
+        if(isSameRelations(extraRelations[i].first) && !isSameRelations(extraRelations[i].second))
+        {
+            newRelations.push_back(extraRelations[i].second);
+            found=true;
+            extraRelations.remove(i);
+        }
+    }
     for(int i=0;i<relations.size();i++)
     {
         for(int j=0;j<relations.size();j++)
         {
-            if(relations[i].from==relations[j].from && relations[i].type==relations[j].type && relations[j].type=="equals")
+            if((startSize==0 || numsOfNeedObjs.contains(relations[i].from) )
+                    && relations[j].type=="equals" && (relations[i].to==relations[j].from || relations[i].to==relations[j].to ) && relations[i].type==relations[j].type )
             {
-                Relation rel(relations[i].to,relations[j].to,"equals");
+                if(relations[i].to==relations[j].from)
+                {
+                    Relation rel(relations[i].from,relations[j].to,"equals");
+                    if(!isSameRelations(rel))
+                    {
+                        newRelations.push_back(rel);
+                        //qDebug()<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                        found=true;
+                    }
+                }
+                if(relations[i].to==relations[j].to)
+                {
+                    Relation rel(relations[i].from,relations[j].from,"equals");
+                    if(!isSameRelations(rel))
+                    {
+                        newRelations.push_back(rel);
+                        //qDebug()<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                        found=true;
+                    }
+                }
+            }
+            if((startSize==0 || numsOfNeedObjs.contains(relations[i].to))
+                    && relations[j].type=="equals" && (relations[i].from==relations[j].to || relations[i].from==relations[j].from) && relations[i].type==relations[j].type)
+            {
+                if(relations[i].from==relations[j].to)
+                {
+                    Relation rel(relations[i].to,relations[j].from,"equals");
+                    if(!isSameRelations(rel))
+                    {
+                        newRelations.push_back(rel);
+                        //qDebug()<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                        found=true;
+                    }
+                }
+                if(relations[i].from==relations[j].from)
+                {
+                    Relation rel(relations[i].to,relations[j].to,"equals");
+                    if(!isSameRelations(rel))
+                    {
+                        newRelations.push_back(rel);
+                        //qDebug()<<newObjects[rel.from]<<rel.type<<newObjects[rel.to];
+                        found=true;
+                    }
+                }
+            }
+
+            if(relations[i].type=="isA" && relations[i].to==relations[j].from && (relations[i].type==relations[j].type || relations[j].type=="equals"))
+            {
+                Relation rel(relations[i].from,relations[j].to,"isA");
                 if(!isSameRelations(rel))
                 {
                     newRelations.push_back(rel);
@@ -644,9 +852,16 @@ bool Parser::findNewRelations(QVector<Relation> relations)
                     found=true;
                 }
             }
-            if(relations[i].to==relations[j].to && relations[i].type==relations[j].type && relations[j].type=="equals")
+
+            if(relations[i].type=="consist_of" && (relations[i].to==relations[j].from || relations[i].from==relations[j].to)
+                    && (relations[i].type==relations[j].type || relations[j].type=="equals" || relations[j].type=="isA"))
             {
-                Relation rel(relations[i].from,relations[j].from,"equals");
+                Relation rel(relations[i].from,relations[j].to,"consist_of");
+                if(relations[i].from==relations[j].to)
+                {
+                    rel.from=relations[j].from;
+                    rel.to=relations[i].to;
+                }
                 if(!isSameRelations(rel))
                 {
                     newRelations.push_back(rel);
@@ -657,6 +872,9 @@ bool Parser::findNewRelations(QVector<Relation> relations)
         }
     }
 
+    deltaRel=this->newRelations.size()-relations.size();
+    if(deltaRel==0)
+        deltaRel=1;
     return found;
 }
 
@@ -683,7 +901,7 @@ QVector<QPair<int, QString> > Parser::cutFunc(QString obj, QString func)
         pair.second=str;
         vec.push_back(pair);
         l+=str.size();
-       // qDebug()<<pair;
+        // qDebug()<<pair;
     }
     return vec;
 }
@@ -727,6 +945,8 @@ QString Parser::findOpenScob(QString obj, QString sim)
             i++;
             str=obj.mid(ind-i,i+1);
         }
+        if(str[0]=='(')
+            str.remove(0,1);
     }
     return str;
 }
@@ -739,12 +959,14 @@ QString Parser::findCloseScob(QString obj, QString sim)
         int ind=obj.indexOf(sim);
         int i=1;
         str=obj.mid(ind,i);
-        while(i<obj.size() && countLeftScobs(str)>=countRightScobs(str))
+        while(i<obj.size() && countLeftScobs(str)>=countRightScobs(str) && !str.contains("(+") && !str.contains("(-"))
         {
             //qDebug()<<"STR::"<<str;
             i++;
             str=obj.mid(ind,i);
         }
+        if(str.contains("(+") || str.contains("(-"))
+            str.remove(str.size()-3,2);
     }
     return str;
 }
@@ -758,18 +980,16 @@ QString Parser::findExpBeforeSim(QString obj,QString sim)
         int ind=obj.indexOf(sim)-1;
         if(sim.contains(")"))
             ind=obj.indexOf(sim);
-        int count = obj.count(sim);
-        //if(count==1)
-        //{
-            int i=1;
-            str=obj.mid(ind,1);
-            while(i<ind && (countLeftScobs(str)!=countRightScobs(str)))
-            {
-                i++;
-                str=obj.mid(ind-i,i+1);
-            }
-            //qDebug()<<obj<<" BEF_STR: "<<str;
-        //}
+        int i=1;
+        str=obj.mid(ind,1);
+        while(i<ind && (countLeftScobs(str)!=countRightScobs(str)))
+        {
+            i++;
+            str=obj.mid(ind-i,i+1);
+        }
+        //qDebug()<<"STR::"<<str;
+        if(obj.indexOf(str)==obj.indexOf("/"+str)+1 || obj.indexOf(str)==obj.indexOf("*"+str)+1 )
+            str="";
     }
     return str;
 }
@@ -780,20 +1000,19 @@ QString Parser::findExpAfterSim(QString obj,QString sim)
     QString str="";
     if(obj.contains(sim))
     {
-        int ind=obj.indexOf(sim);
+        int ind=obj.indexOf(sim)+sim.size();
         if(sim.contains("("))
-            ind=obj.indexOf(sim)-1;
-        int count = obj.count(sim);
-       // if(count==1)
-       // {
-            int i=1;
-            str=obj.mid(ind+sim.size(),i);
-            while(i<obj.size() && countLeftScobs(str)!=countRightScobs(str))
-            {
-                i++;
-                str=obj.mid(ind+sim.size(),i);
-            }
-        //}
+            ind=obj.indexOf(sim)-1+sim.size();
+        int i=1;
+        str=obj.mid(ind,i);
+        while(i<obj.size()-ind && (countLeftScobs(str)!=countRightScobs(str)))
+        {
+            i++;
+            str=obj.mid(ind,i);
+        }
+        //qDebug()<<"STR::"<<str;
+        if(obj.indexOf(str)==obj.indexOf(str+"/") || obj.indexOf(str)==obj.indexOf(str+"*"))
+            str="";
     }
     return str;
 }
@@ -802,7 +1021,7 @@ QString Parser::deleteOppositeObjs(QString obj, QString objIn, QVector<QPair<int
 {
     QString str="";
     QString oldObj=obj;
-    if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
+    if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
         obj=deleteAllFuncs(obj,cutF);
 
     int count1 = obj.count("+("+objIn+")")-obj.count("+("+objIn+")*")-obj.count("+("+objIn+")/")-obj.count("+("+objIn+")^");
@@ -817,19 +1036,19 @@ QString Parser::deleteOppositeObjs(QString obj, QString objIn, QVector<QPair<int
         if(ind2>=ind1) ind2 = ind2 -objIn.size()-3;
         str=obj.remove(ind2,objIn.size()+3);
         //qDebug()<<"STR:: "<<str;
-        if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
-            for(int k=0;k<cutF.size();k++)
-            {
-                //qDebug()<<objects[j]<<" :: "<<tmpStr3<<" : "<<objects[i]<<"  ::  " <<ind<<" : "<<cutF[k].first;
-                if(cutF[k].first>=ind1)
-                {
-                    cutF[k].first=cutF[k].first-objIn.size()-3;
-                }
-                if(cutF[k].first>=ind2)
-                {
-                    cutF[k].first=cutF[k].first-objIn.size()-3;
-                }
-            }
+        //        if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
+        //            for(int k=0;k<cutF.size();k++)
+        //            {
+        //                //qDebug()<<objects[j]<<" :: "<<tmpStr3<<" : "<<objects[i]<<"  ::  " <<ind<<" : "<<cutF[k].first;
+        //                if(cutF[k].first>=ind1)
+        //                {
+        //                    cutF[k].first=cutF[k].first-objIn.size()-3;
+        //                }
+        //                if(cutF[k].first>=ind2)
+        //                {
+        //                    cutF[k].first=cutF[k].first-objIn.size()-3;
+        //                }
+        //            }
         //qDebug()<<str;
         count1 = str.count("+("+objIn+")")-str.count("+("+objIn+")*")-str.count("+("+objIn+")/")-str.count("+("+objIn+")^");
         count2 = str.count("-("+objIn+")")-str.count("-("+objIn+")*")-str.count("-("+objIn+")/")-str.count("-("+objIn+")^");
@@ -845,24 +1064,14 @@ QString Parser::deleteOppositeObjs(QString obj, QString objIn, QVector<QPair<int
                 str=str.remove(ind1,objIn.size()+3);
                 if(ind2>=ind1) ind2 = ind2 -objIn.size()-3;
                 str=str.remove(ind2,objIn.size()+3);
-                for(int k=0;k<cutF.size();k++)
-                {
-                    if(cutF[k].first>=ind1)
-                    {
-                        cutF[k].first=cutF[k].first-objIn.size()-3;
-                    }
-                    if(cutF[k].first>=ind2)
-                    {
-                        cutF[k].first=cutF[k].first-objIn.size()-3;
-                    }
-                }
                 count1 = str.count("+("+objIn+")")-str.count("+("+objIn+")*")-str.count("+("+objIn+")/")-str.count("+("+objIn+")^");
                 count2 = str.count("-("+objIn+")")-str.count("-("+objIn+")*")-str.count("-("+objIn+")/")-str.count("-("+objIn+")^");
             }
         }
 
-       if(cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj))
-            str=insertAllFuncs(str,cutF);
+        if((cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
+            while(str.contains("()"))
+                str=str.insert(str.indexOf("()")+1,cutF[0].second);
         //qDebug()<<" FINALY:: "<<str;
         //qDebug()<<" *************************************************** ";
     }
@@ -875,8 +1084,7 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
     QString oldObj=obj;
     if(plus)
     {
-       // qDebug()<<obj<<" : "<<cutF.size();
-        if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
+        if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))&& !objIn.contains(cutF[0].second) )
             obj=deleteAllFuncs(obj,cutF);
 
         int count = obj.count("+("+objIn+")")-obj.count("+("+objIn+")*")-obj.count("+("+objIn+")/")-obj.count("+("+objIn+")^");
@@ -884,18 +1092,16 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
         int ind=obj.indexOf("+("+objIn+")");
         if(ind>=0 && ind!=obj.indexOf("+("+objIn+")*") && ind!=obj.indexOf("+("+objIn+")/") && ind!=obj.indexOf("+("+objIn+")^"))
         {
-           // qDebug()<<obj<<"  !!  "<<objIn;
             str=obj.remove(ind,objIn.size()+3);
-            if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
-                for(int k=0;k<cutF.size();k++)
-                {
-                    //qDebug()<<objects[j]<<" :: "<<tmpStr3<<" : "<<objects[i]<<"  ::  " <<ind<<" : "<<cutF[k].first;
-                    if(cutF[k].first>=ind)
-                    {
-                        cutF[k].first=cutF[k].first-objIn.size()-3;
-                    }
-                }
-            //qDebug()<<str;
+            //            if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
+            //                for(int k=0;k<cutF.size();k++)
+            //                {
+            //                    //qDebug()<<objects[j]<<" :: "<<tmpStr3<<" : "<<objects[i]<<"  ::  " <<ind<<" : "<<cutF[k].first;
+            //                    if(cutF[k].first>=ind)
+            //                    {
+            //                        cutF[k].first=cutF[k].first-objIn.size()-3;
+            //                    }
+            //                }
             if(count>1)
             {
                 count = str.count("+("+objIn+")")-str.count("+("+objIn+")*")-str.count("+("+objIn+")/")-str.count("+("+objIn+")^");
@@ -903,17 +1109,9 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
                 ind=str.indexOf("+("+objIn+")");
                 while(count>1)
                 {
-                   // qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
                     if(ind>=0 && ind!=str.indexOf("+("+objIn+")*") && ind!=obj.indexOf("+("+objIn+")/") && ind!=obj.indexOf("+("+objIn+")^"))
                     {
                         str=str.remove(ind,objIn.size()+3);
-                        for(int k=0;k<cutF.size();k++)
-                        {
-                            if(cutF[k].first>=ind)
-                            {
-                                cutF[k].first=cutF[k].first-objIn.size()-3;
-                            }
-                        }
                         count = str.count("+("+objIn+")")-str.count("+("+objIn+")*")-str.count("+("+objIn+")/")-str.count("+("+objIn+")^");
                     }
                     else
@@ -921,7 +1119,6 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
                         if(ind>=0)
                             ind=str.indexOf("+("+objIn+")",str.indexOf("+("+objIn+")")+1);
                     }
-                   // qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
                 }
                 ind=str.indexOf("+("+objIn+")");
 
@@ -930,21 +1127,10 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
 
                 if(ind>=0 && ind!=str.indexOf("+("+objIn+")*") && ind!=obj.indexOf("+("+objIn+")/") && ind!=obj.indexOf("+("+objIn+")^"))
                     str=str.replace(ind,objIn.size()+3,"+"+num+"*("+objIn+")");
-                for(int k=0;k<cutF.size();k++)
-                {
-                    if(cutF[k].first>=ind)
-                    {
-                        cutF[k].first=cutF[k].first+num.size()+1;
-                    }
-                }
-               // qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
-                //qDebug()<<objects[j]<<" :: "<<" : "<<tmpStr4<<" : "<<objects[i];
-                if(cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj))
-                    str=insertAllFuncs(str,cutF);/*
-                if(str.indexOf('+')!=0 && str[str.indexOf('+')-1]=='(')
-                    str.remove(str.indexOf('+'),1);*/
-              //  qDebug()<<" FINALY:: "<<str;
-              //  qDebug()<<" *************************************************** ";
+
+                if((cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
+                    while(str.contains("()"))
+                        str=str.insert(str.indexOf("()")+1,cutF[0].second);
             }
             else
                 str="";
@@ -952,8 +1138,7 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
     }
     else
     {
-        //qDebug()<<obj;
-        if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
+        if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
             obj=deleteAllFuncs(obj,cutF);
 
         int count = obj.count("-("+objIn+")")-obj.count("-("+objIn+")*")-obj.count("-("+objIn+")/")-obj.count("-("+objIn+")^");
@@ -961,8 +1146,7 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
         int ind=obj.indexOf("-("+objIn+")");
         if(ind>=0 && ind!=obj.indexOf("-("+objIn+")*") && ind!=obj.indexOf("-("+objIn+")/") && ind!=obj.indexOf("-("+objIn+")^"))
         {
-          //  qDebug()<<obj;
-            str=obj.remove(ind,objIn.size()+3);
+            str=obj.remove(ind,objIn.size()+3);/*
             if((cutF.size()>1 ) || (cutF.size()==1 && cutF[0].second!=oldObj))
                 for(int k=0;k<cutF.size();k++)
                 {
@@ -971,8 +1155,7 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
                     {
                         cutF[k].first=cutF[k].first-objIn.size()-3;
                     }
-                }
-            //qDebug()<<str;
+                }*/
             if(count>1)
             {
                 count = str.count("-("+objIn+")")-str.count("-("+objIn+")*")-str.count("-("+objIn+")/")-str.count("-("+objIn+")^");
@@ -980,17 +1163,9 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
                 ind=str.indexOf("-("+objIn+")");
                 while(count>1)
                 {
-                   // qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
                     if(ind>=0 && ind!=str.indexOf("-("+objIn+")*") && ind!=obj.indexOf("-("+objIn+")/") && ind!=obj.indexOf("-("+objIn+")^"))
                     {
                         str=str.remove(ind,objIn.size()+3);
-                        for(int k=0;k<cutF.size();k++)
-                        {
-                            if(cutF[k].first>=ind)
-                            {
-                                cutF[k].first=cutF[k].first-objIn.size()-3;
-                            }
-                        }
                         count = str.count("-("+objIn+")")-str.count("-("+objIn+")*")-str.count("-("+objIn+")/")-str.count("-("+objIn+")^");
                     }
                     else
@@ -998,8 +1173,6 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
                         if(ind>=0)
                             ind=str.indexOf("-("+objIn+")",str.indexOf("-("+objIn+")")+1);
                     }
-
-                   // qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
                 }
                 ind=str.indexOf("-("+objIn+")");
 
@@ -1008,19 +1181,11 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
 
                 if(ind>=0 && ind!=str.indexOf("-("+objIn+")*") && ind!=obj.indexOf("-("+objIn+")/") && ind!=obj.indexOf("-("+objIn+")^"))
                     str=str.replace(ind,objIn.size()+3,"-"+num+"*("+objIn+")");
-                for(int k=0;k<cutF.size();k++)
-                {
-                    if(cutF[k].first>=ind)
-                    {
-                        cutF[k].first=cutF[k].first+num.size()+1;
-                    }
-                }
-              //  qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
-                //qDebug()<<objects[j]<<" :: "<<" : "<<tmpStr4<<" : "<<objects[i];
-                if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
-                    str=insertAllFuncs(str,cutF);
-               // qDebug()<<" FINALY:: "<<str;
-               // qDebug()<<" *************************************************** ";
+
+                if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
+                    while(str.contains("()"))
+                        str=str.insert(str.indexOf("()")+1,cutF[0].second);
+
             }
             else
                 str="";
@@ -1031,13 +1196,12 @@ QString Parser::plusMinusSameObjs(bool plus, QString obj, QString objIn, QVector
 
 QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector<QPair<int, QString> > cutF)
 {
-  //  qDebug()<<"OBJ::"<<obj;
     QString str="";
     QString oldObj=obj;
     if(bef)
     {
         QString fullStr;
-        if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
+        if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
             obj=deleteAllFuncs(obj,cutF);
 
         int count = obj.count("*("+objIn+")");
@@ -1046,21 +1210,19 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
         {
             str=obj.remove(ind,objIn.size()+3);
             QString strAroundInd = (cutAroundIndex(ind,str));
-          //  qDebug()<<" STR:: "<<str<<" strAroundInd:: "<<strAroundInd<<" OBJIN:: "<<objIn<<" INDEX:: "<<ind;
             if(strAroundInd!="")
             {
                 fullStr=fullStr+strAroundInd;
-                //qDebug()<<" FULL:: "<<fullStr;
                 str=str.remove(str.indexOf(strAroundInd,ind-strAroundInd.size()),strAroundInd.size());
             }
-            if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
-                for(int k=0;k<cutF.size();k++)
-                {
-                    if(cutF[k].first>=ind)
-                    {
-                        cutF[k].first=cutF[k].first-objIn.size()-3-strAroundInd.size();
-                    }
-                }
+            //            if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
+            //                for(int k=0;k<cutF.size();k++)
+            //                {
+            //                    if(cutF[k].first>=ind)
+            //                    {
+            //                        cutF[k].first=cutF[k].first-objIn.size()-3-strAroundInd.size();
+            //                    }
+            //                }
             if(count>1)
             {
                 count = str.count("*("+objIn+")");
@@ -1071,19 +1233,10 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
                     {
                         str=str.remove(ind,objIn.size()+3);
                         strAroundInd = (cutAroundIndex(ind,str));
-                      //  qDebug()<<" STR:: "<<str<<" strAroundInd:: "<<strAroundInd<<" OBJIN:: "<<objIn<<" INDEX:: "<<ind;
                         if(strAroundInd!="")
                         {
                             fullStr=fullStr+strAroundInd;
-                            //qDebug()<<" FULL:: "<<fullStr;
                             str=str.remove(str.indexOf(strAroundInd,ind-strAroundInd.size()),strAroundInd.size());
-                        }
-                        for(int k=0;k<cutF.size();k++)
-                        {
-                            if(cutF[k].first>=ind)
-                            {
-                                cutF[k].first=cutF[k].first-objIn.size()-3-strAroundInd.size();
-                            }
                         }
                         count = str.count("*("+objIn+")");
                     }
@@ -1093,28 +1246,21 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
                 {
                     str=str.remove(ind,objIn.size()+3);
                     strAroundInd = (cutAroundIndex(ind,str));
-                  //  qDebug()<<" STR:: "<<str<<" strAroundInd:: "<<strAroundInd<<" OBJIN:: "<<objIn<<" INDEX:: "<<ind;
                     if(strAroundInd!="")
                     {
                         ind=str.indexOf(strAroundInd,ind-strAroundInd.size());
                         fullStr=fullStr+strAroundInd;
-                       // qDebug()<<" FULL:: "<<fullStr;
                         str=str.remove(ind,strAroundInd.size());
                     }
                     fullStr="+("+objIn+")*("+fullStr+")";
                     str.insert(ind,fullStr);
-                    for(int k=0;k<cutF.size();k++)
-                    {
-                        if(cutF[k].first>=ind)
-                        {
-                            cutF[k].first=cutF[k].first-objIn.size()-2-strAroundInd.size()+fullStr.size();
-                        }
-                    }
                 }
 
-                if(cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj))
-                    str=insertAllFuncs(str,cutF);
-              //  qDebug()<<" FINALY:: "<<str;
+                if((cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj))  && !objIn.contains(cutF[0].second))
+                {
+                    while(str.contains("()"))
+                        str=str.insert(str.indexOf("()")+1,cutF[0].second);
+                }
             }
             else
                 str="";
@@ -1123,7 +1269,7 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
     else
     {
         QString fullStr;
-        if((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj))
+        if(((cutF.size()>1) || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
             obj=deleteAllFuncs(obj,cutF);
 
         int count = obj.count("("+objIn+")*");
@@ -1135,14 +1281,11 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
             if(strAroundInd!="")
             {
                 fullStr=fullStr+strAroundInd;
-                //qDebug()<<" FULL:: "<<fullStr;
-               // qDebug()<<" STR:: "<<str<<" strAroundInd:: "<<strAroundInd<<" INDEX:: "<<str.indexOf(strAroundInd,ind-1);
                 if(ind>=strAroundInd.size())
                     str=str.remove(str.indexOf(strAroundInd,ind-strAroundInd.size()-1),strAroundInd.size());
                 else
                     str=str.remove(str.indexOf(strAroundInd,ind-1),strAroundInd.size());
-              //  qDebug()<<" STR:: "<<str;
-            }
+            }/*
             if(cutF.size()>1  || (cutF.size()==1 && cutF[0].second!=oldObj))
                 for(int k=0;k<cutF.size();k++)
                 {
@@ -1151,8 +1294,8 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
                     {
                         cutF[k].first=cutF[k].first-objIn.size()-3-strAroundInd.size();
                     }
-                }
-           // qDebug()<<" STR:: "<<str;
+                }*/
+            // qDebug()<<" STR:: "<<str;
             if(count>1)
             {
                 count = str.count("("+objIn+")*");
@@ -1161,32 +1304,20 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
                     ind=str.indexOf("("+objIn+")*");
                     if(ind>=0)
                     {
-                        //qDebug()<<" OLD_STR:: "<<str<<" INDEX:: "<<ind<<" SIZE:: "<<objIn.size()+3;
                         str=str.remove(ind,objIn.size()+3);
-                        //qDebug()<<" NEW_STR:: "<<str;
                         strAroundInd = (cutAroundIndex(ind,str));
                         if(strAroundInd!="")
                         {
                             fullStr=fullStr+strAroundInd;
-                           // qDebug()<<" FULL:: "<<fullStr;
                             if(ind>=strAroundInd.size())
                                 str=str.remove(str.indexOf(strAroundInd,ind-1-strAroundInd.size()),strAroundInd.size());
                             else
                                 str=str.remove(str.indexOf(strAroundInd,ind-1),strAroundInd.size());
-                           // qDebug()<<" STR:: "<<str;
-                        }
-                        for(int k=0;k<cutF.size();k++)
-                        {
-                            if(cutF[k].first>=ind)
-                            {
-                                cutF[k].first=cutF[k].first-objIn.size()-3-strAroundInd.size();
-                            }
                         }
                         count = str.count("("+objIn+")*");
                     }
                 }
                 ind=str.indexOf("("+objIn+")*");
-                //qDebug()<<" INDEX:: "<<ind;
                 if(ind>=0)
                 {
                     str=str.remove(ind,objIn.size()+3);
@@ -1198,33 +1329,23 @@ QString Parser::outOfScobsSameObjs(bool bef, QString obj, QString objIn, QVector
                         else
                             ind=str.indexOf(strAroundInd,ind-1);
                         fullStr=fullStr+strAroundInd;
-                      //  qDebug()<<" FULL:: "<<fullStr;
                         str=str.remove(ind,strAroundInd.size());
-                     //   qDebug()<<" STR:: "<<str;
                     }
                     fullStr="+("+objIn+")*("+fullStr+")";
                     str.insert(ind,fullStr);
-                    for(int k=0;k<cutF.size();k++)
-                    {
-                        if(cutF[k].first>=ind)
-                        {
-                            cutF[k].first=cutF[k].first-objIn.size()-2-strAroundInd.size()+fullStr.size();
-                        }
-                    }
                 }
 
-                //qDebug()<<ind<<" :: "<<str<<" :: "<<objIn;
-                if(cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj))
-                    str=insertAllFuncs(str,cutF);
-               // qDebug()<<" FINALY:: "<<str;
-               // qDebug()<<" *************************************************** ";
+                if((cutF.size()>1 || (cutF.size()==1 && cutF[0].second!=oldObj)) && !objIn.contains(cutF[0].second))
+                {
+                    while(str.contains("()"))
+                        str=str.insert(str.indexOf("()")+1,cutF[0].second);
+                }
             }
             else
                 str="";
         }
     }
 
-   // qDebug()<<"STR::"<<str;
     return str;
 }
 
@@ -1235,9 +1356,10 @@ QString Parser::multTwoObjs(QString origObj, QString obj1, QString obj2)
     QString str=origObj;
     QString tmpStr="";
     if(objs1.size()>1 && objs2.size()>1)
-    {
-        //qDebug()<<"OBJ1::"<<obj1<<"OBJS1::"<<objs1;
-       // qDebug()<<"OBJ2::"<<obj2<<"OBJS2::"<<objs2;
+    {/*
+        qDebug()<<"ORIGOBJ::"<<origObj;
+        qDebug()<<"OBJ1::"<<obj1<<"OBJS1::"<<objs1;
+        qDebug()<<"OBJ2::"<<obj2<<"OBJS2::"<<objs2;*/
         for(int i=0;i<objs1.size();i++)
         {
             for(int j=0;j<objs2.size();j++)
@@ -1255,7 +1377,7 @@ QString Parser::multTwoObjs(QString origObj, QString obj1, QString obj2)
                     tmpStr=tmpStr+objs1Obj+"*"+objs2Obj;
                 }
             }
-           // qDebug()<<"*******TMPSTR::"<<tmpStr;
+            // qDebug()<<"*******TMPSTR::"<<tmpStr;
         }
     }
     QString multObjStr=obj1+"*"+obj2;
@@ -1268,30 +1390,43 @@ QString Parser::multTwoObjs(QString origObj, QString obj1, QString obj2)
     str="("+str+")";
     while(str.contains("()"))
         str=deleteScobs(str);
-   // while(str.contains("++"))
-        //str=deleteDoublePM(str);
+    // while(str.contains("++"))
+    //str=deleteDoublePM(str);
     return str;
 }
 
 
 QString Parser::plusTwoObjs(QString origObj, QString obj1, QString obj2)
 {
+
+    if((obj1[0]!='+' && obj1[1]!='+') && (obj1[0]!='-' && obj1[1]!='-') && origObj.indexOf(obj1)-1>=0
+            && (origObj[origObj.indexOf(obj1)-1]=='+' || origObj[origObj.indexOf(obj1)-1]=='-'))
+        obj1=origObj[origObj.indexOf(obj1)-1]+obj1;
+
+    if((obj2[0]!='+' && obj2[1]!='+') && (obj2[0]!='-' && obj2[1]!='-') && origObj.indexOf(obj2)-1>=0
+            && (origObj[origObj.indexOf(obj2)-1]=='+' || origObj[origObj.indexOf(obj2)-1]=='-'))
+        obj2=origObj[origObj.indexOf(obj2)-1]+obj2;
+
     QString or_obj1 = obj1;
     QString or_obj2 = obj2;
+
     QVector<QString> objs1 = whatObj(obj1);
     QVector<QString> objs2 = whatObj(obj2);
     QString str=origObj;
-    QString tmpStr="";
-    if(objs1.size()>1 && objs2.size()>1)
-    {/*
-        qDebug()<<"OBJ1::"<<obj1<<"OBJS1::"<<objs1;
-        qDebug()<<"OBJ2::"<<obj2<<"OBJS2::"<<objs2;*/
-        if(origObj[origObj.indexOf(obj1)-1]=='+')
+    QString tmpStr="";/*
+    qDebug()<<"------------------------------------";
+    qDebug()<<origObj;
+    qDebug()<<"OBJ1::"<<obj1<<"OBJS1::"<<objs1;
+    qDebug()<<"OBJ2::"<<obj2<<"OBJS2::"<<objs2;*/
+    if((or_obj1.contains('+') || or_obj1.contains('-')) && (or_obj2.contains('+') || or_obj2.contains('-'))
+            && (objs1.size()>1 || objs2.size()>1) && origObj.indexOf(obj1)-1>=0 && origObj.indexOf(obj2)-1>=0)
+    {
+        if(objs1.size()>1 && origObj[origObj.indexOf(obj1)-1]=='+')
         {
             tmpStr=obj1.remove(obj1.size()-1,1).remove(0,1);
         }
         else
-            if(origObj[origObj.indexOf(obj1)-1]=='-')
+            if(objs1.size()>1 && origObj[origObj.indexOf(obj1)-1]=='-')
             {
                 for(int i=0;i<objs1.size();i++)
                 {
@@ -1306,13 +1441,22 @@ QString Parser::plusTwoObjs(QString origObj, QString obj1, QString obj2)
                     }
                 }
             }
-
-        if(origObj[origObj.indexOf(or_obj2)+or_obj2.size()]!='*' && (origObj[origObj.indexOf(or_obj1)-1]=='+' || origObj[origObj.indexOf(or_obj1)-1]=='-'))
+            else
+                if(objs1.size()==1)
+                {
+                    if(or_obj1[0]=='+' || or_obj1[0]=='-')
+                        tmpStr=tmpStr+or_obj1;
+                    else
+                        if(origObj[origObj.indexOf(or_obj1)-1]=='+' || origObj[origObj.indexOf(or_obj1)-1]=='-')
+                            tmpStr=tmpStr+origObj[origObj.indexOf(or_obj1)-1]+or_obj1;
+                }
+        if(objs2.size()>1 && (origObj[origObj.indexOf(or_obj2)+or_obj2.size()]!='*'
+                              && (( origObj.indexOf(or_obj1)-1>=0 && (origObj[origObj.indexOf(or_obj1)-1]=='+' || origObj[origObj.indexOf(or_obj1)-1]=='-'))
+                                  || origObj[origObj.indexOf(or_obj1)]=='+' || origObj[origObj.indexOf(or_obj1)]=='-')))
         {
             if(origObj[origObj.indexOf(obj2)-1]=='+')
             {
                 tmpStr=tmpStr+obj2.remove(obj2.size()-1,1).remove(0,1);
-                //qDebug()<<"ORIG"<<origObj<<"TMPSTR::"<<tmpStr;
             }
             else
                 if(origObj[origObj.indexOf(obj2)-1]=='-')
@@ -1330,27 +1474,41 @@ QString Parser::plusTwoObjs(QString origObj, QString obj1, QString obj2)
                         }
                     }
                 }
-        }
-        //qDebug()<<"IND::"<<ind;
-        if(origObj[origObj.indexOf(or_obj2)-1]=='+')
-        {
-            QString plusObjStr=or_obj1+"+"+or_obj2;
-            int ind1=str.indexOf(plusObjStr);
-            if(ind1>=0 && tmpStr!="")
-                str=str.replace(ind1,plusObjStr.size(),tmpStr);
-            else
-                str=tmpStr;
+            // qDebug()<<"ORIG"<<origObj<<"TMPSTR::"<<tmpStr;
         }
         else
-            if(origObj[origObj.indexOf(or_obj2)-1]=='-')
+            if(objs2.size()==1)
             {
-                QString minusObjStr=or_obj1+"-"+or_obj2;
-                int ind2=str.indexOf(minusObjStr);
-                if(ind2>=0 && tmpStr!="")
-                    str=str.replace(ind2,minusObjStr.size(),tmpStr);
+                if(or_obj2[0]=='+' || or_obj2[0]=='-')
+                    tmpStr=tmpStr+or_obj2;
+                else
+                    if(origObj[origObj.indexOf(or_obj2)-1]=='+' || origObj[origObj.indexOf(or_obj2)-1]=='-')
+                        tmpStr=tmpStr+origObj[origObj.indexOf(or_obj2)-1]+or_obj2;
+            }
+        //qDebug()<<"IND::";
+
+        if(origObj.indexOf(or_obj2)>0)
+        {
+            if(origObj[origObj.indexOf(or_obj2)-1]=='+')
+            {
+                QString plusObjStr=or_obj1+"+"+or_obj2;
+                int ind1=str.indexOf(plusObjStr);
+                if(ind1>=0 && tmpStr!="")
+                    str=str.replace(ind1,plusObjStr.size(),tmpStr);
                 else
                     str=tmpStr;
             }
+            else
+                if(origObj[origObj.indexOf(or_obj2)-1]=='-')
+                {
+                    QString minusObjStr=or_obj1+"-"+or_obj2;
+                    int ind2=str.indexOf(minusObjStr);
+                    if(ind2>=0 && tmpStr!="")
+                        str=str.replace(ind2,minusObjStr.size(),tmpStr);
+                    else
+                        str=tmpStr;
+                }
+        }
         while(str.contains("()"))
             str=deleteScobs(str);
     }
@@ -1389,7 +1547,7 @@ QString Parser::cutAroundIndex(int index, QString obj)
         if(tmpStr.contains(re) && tmpStr!="+" && tmpStr!="-")
             str+=tmpStr;
     }
-    if(str.contains(re) && str!="+" && str!="-")
+    if((str.contains(re) && str!="+" && str!="-") || str.contains("()") )
         return str;
     else
         return "";
@@ -1420,11 +1578,11 @@ QString Parser::deleteDoublePM(QString str)
     //qDebug()<<"3::"<<str;
     if(str.contains("+-"))
         str=str.replace("+-","-");
-   // qDebug()<<"4::"<<str;
+    // qDebug()<<"4::"<<str;
     if(str.contains("-+"))
         str=str.replace("-+","-");
-   // qDebug()<<"5::"<<str;
-  //  qDebug()<<"======================================";
+    // qDebug()<<"5::"<<str;
+    //  qDebug()<<"======================================";
     return str;
 }
 
@@ -1522,7 +1680,10 @@ QVector<QString> Parser::whatObj(QString str)
     QVector<QString>  objs;
     QString tmpStr="";
     int i=1;
-    //qDebug()<<str;
+    if(str.size()>0 && (str[0]=='+' || str[0]=='-'))
+        i=1;
+    if(str.size()>0 && str[0]=='(' && str[1]!='+' && str[1]!='-')
+        i=0;
     while(i<str.size())
     {
         bool flag=false;
@@ -1535,32 +1696,14 @@ QVector<QString> Parser::whatObj(QString str)
             flag=true;
             i++;
         }
-
-//        if(countLeftScobs(tmpStr)>countRightScobs(tmpStr))
-//        {
-//            while(countLeftScobs(tmpStr)!=countRightScobs(tmpStr))
-//                tmpStr.remove(tmpStr.indexOf("("),1);
-//        }
-//        if(countLeftScobs(tmpStr)<countRightScobs(tmpStr))
-//        {
-//            while(countLeftScobs(tmpStr)!=countRightScobs(tmpStr))
-//                tmpStr.remove(tmpStr.indexOf(")"),1);
-//        }
-//        D:\\Qt\\Qt5.1.1\\Tools\\QtCreator\\bin\\ProductionSystem\\test.txt
         if(tmpStr!="")
         {
-            //if(tmpStr[0]=='+')
-                //tmpStr.remove(0,1);
-//            if(tmpStr[0]!='(' || tmpStr[tmpStr.size()-1]!=')')
-//            {
-//                tmpStr="("+tmpStr+")";
-//                //qDebug()<<tmpStr;
-//            }
             objs.push_back(tmpStr);
         }
         if(!flag)
             i++;
     }
+    //qDebug()<<str;
     return objs;
 }
 

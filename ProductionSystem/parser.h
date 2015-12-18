@@ -24,12 +24,17 @@ public:
     int deltaSize;
 
 private:
+    int delta;
+    int deltaRel;
+
     QVector<QString> progTxt;
     QMap<int,QString> objects;
     QVector<Relation> relations;
+    QVector<QPair<Relation,Relation> > extraRelations;
     QVector<QString> rules;
     QMap<int,QString> newObjects;
     QVector<Relation> newRelations;
+    QVector<QPair<QString,QString> > objWRules;
 
     void parseFile(); //Парсит файл
 
@@ -40,8 +45,7 @@ private:
 
     bool findNewObjects(QMap<int,QString> objects, QVector<Relation> relations);  //Ищет и формирует новые объекты из имеющихся
     bool findNewRelations(QVector<Relation> relations); //Ищет и формирует новые отношения из имеющихся
-    bool findNewObjWithRules(QMap<int,QString> objects, QString object1, QString object2, QString str); //Ищет новые объекты в соответствии с заданными правилами
-
+    void findNewObjWithRules(QMap<int,QString> objects, int startSize); //Ищет новые объекты в соответствии с заданными правилами
 
     QString deleteScobs(QString str); //Удаляет скобки вида ()
     QString deleteDoublePM(QString str); //Удаляет знаки вида ++ --
